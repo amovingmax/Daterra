@@ -21,8 +21,9 @@ export const cnpjSchema = z
 
 export const phoneSchema = z
   .string()
-  .regex(/^\+?55?\s?\(?\d{2}\)?\s?9?\s?\d{4}-?\d{4}$/, 'Telefone inválido')
-  .transform((v) => v.replace(/\D/g, ''));
+  .min(1, 'Telefone é obrigatório')
+  .transform((v) => v.replace(/\D/g, ''))
+  .pipe(z.string().regex(/^(55)?\d{10,11}$/, 'Telefone inválido'));
 
 export const cepSchema = z
   .string()
