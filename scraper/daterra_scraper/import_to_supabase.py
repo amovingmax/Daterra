@@ -44,7 +44,6 @@ def _normalize_supplier(item: dict[str, Any]) -> dict[str, Any]:
 
     cnpj fica null — admin preenche antes de ativar (constraint do banco).
     """
-    # Fallback: se whatsapp ausente mas tem phone, usa o phone como contato.
     contact_whatsapp = item.get("whatsapp") or item.get("phone")
     return {
         "slug": item["slug"],
@@ -55,8 +54,14 @@ def _normalize_supplier(item: dict[str, Any]) -> dict[str, Any]:
         "story": item.get("story"),
         "logo_url": item.get("logo_url"),
         "cover_url": item.get("cover_url"),
+        # Endereço estruturado (preenchido a partir do scrape de browser-act)
+        "street": item.get("street"),
+        "number": item.get("number"),
+        "complement": item.get("complement"),
+        "district": item.get("district"),
         "city": item.get("city") or "Natal",
         "state": "RN",
+        "zip_code": item.get("zip_code"),
         "whatsapp": contact_whatsapp,
         "instagram": item.get("instagram"),
         "email": item.get("email"),
