@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from ..http import CachedClient
-from ..models import Supplier
-from ._common import dedupe_suppliers, scrape_section
+from ..models import Product, Supplier
+from ._common import scrape_listing
 
 
-def scrape_hospitality(client: CachedClient) -> list[Supplier]:
-    return dedupe_suppliers(scrape_section("/hotelaria/", "hospitality", client))
+def scrape_hospitality(client: CachedClient) -> tuple[list[Supplier], list[Product]]:
+    return scrape_listing("/hotelaria/", "hospitality", client)

@@ -40,19 +40,24 @@ def _today_iso() -> str:
 
 
 def _normalize_supplier(item: dict[str, Any]) -> dict[str, Any]:
-    """Mapeia o JSON do scraper pro shape da tabela suppliers."""
+    """Mapeia o JSON do scraper pro shape da tabela suppliers.
+
+    cnpj fica null — admin preenche antes de ativar (constraint do banco).
+    """
+    # Fallback: se whatsapp ausente mas tem phone, usa o phone como contato.
+    contact_whatsapp = item.get("whatsapp") or item.get("phone")
     return {
         "slug": item["slug"],
         "name": item["name"],
         "type": item["type"],
-        "cnpj": (item.get("cnpj") or "").ljust(14, "0")[:14],  # placeholder até CNPJ real
+        "cnpj": item.get("cnpj"),
         "description": item.get("description"),
         "story": item.get("story"),
         "logo_url": item.get("logo_url"),
         "cover_url": item.get("cover_url"),
         "city": item.get("city") or "Natal",
         "state": "RN",
-        "whatsapp": item.get("whatsapp"),
+        "whatsapp": contact_whatsapp,
         "instagram": item.get("instagram"),
         "email": item.get("email"),
         "feito_potiguar_certified_at": _today_iso(),
@@ -132,7 +137,7 @@ def main(
                 "slug": p["slug"],
                 "name": p["name"],
                 "description": p.get("description"),
-                "price_cents": 0,  # placeholder — será editado pelo fornecedor
+                "price_cents": None,  # fornecedor define antes de ativar (constraint do banco)
                 "photos": [p["photo_url"]] if p.get("photo_url") else [],
                 "is_active": False,
                 "source": "feito_potiguar_scrape",
