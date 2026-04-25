@@ -3,11 +3,8 @@ import {
   ORDER_STATUSES,
   PAYMENT_METHODS,
   SUPPLIER_TYPES,
-  FEITO_POTIGUAR_CATEGORIES,
   SUPPORTED_STATE,
 } from '../constants/index';
-
-const categorySlugs = FEITO_POTIGUAR_CATEGORIES.map((c) => c.slug) as [string, ...string[]];
 
 export const cpfSchema = z
   .string()
@@ -88,7 +85,7 @@ export const productAddonSchema = z.object({
 export const productSchema = z.object({
   name: z.string().min(2).max(120),
   description: z.string().max(2000).nullable().optional(),
-  category: z.enum(categorySlugs),
+  category: z.string().min(1, 'Categoria é obrigatória'),
   subcategory: z.string().max(60).nullable().optional(),
   price_cents: z.number().int().positive(),
   promo_price_cents: z.number().int().positive().nullable().optional(),
@@ -147,7 +144,7 @@ export const supplierProfileSchema = z.object({
   cnpj: cnpjSchema,
   description: z.string().max(800).nullable().optional(),
   story: z.string().max(4000).nullable().optional(),
-  primary_category: z.enum(categorySlugs),
+  primary_category: z.string().min(1, 'Categoria principal é obrigatória'),
   whatsapp: phoneSchema.nullable().optional(),
   instagram: z.string().max(60).nullable().optional(),
 });

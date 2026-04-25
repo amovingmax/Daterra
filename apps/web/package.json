@@ -14,7 +14,7 @@
     "@daterra/database": "workspace:*",
     "@daterra/shared": "workspace:*",
     "@daterra/ui": "workspace:*",
-    "@supabase/ssr": "^0.5.2",
+    "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.46.1",
     "next": "15.5.15",
     "react": "19.1.0",
