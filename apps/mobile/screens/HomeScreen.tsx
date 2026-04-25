@@ -1,152 +1,446 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Image,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { useAuth } from '../lib/auth-context';
-import { listActiveSuppliers } from '../lib/queries';
+import {
+  listActiveSuppliers,
+  listPopularSuppliers,
+  unreadNotificationsCount,
+} from '../lib/queries';
 import type { DBSupplier } from '../lib/supabase';
 import type { HomeStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
+interface BannerSlide {
+  title: string;
+  subtitle: string;
+  emoji: string;
+  bg: string;
+  fg: string;
+  accent: string;
+}
+
+const BANNER_SLIDES: BannerSlide[] = [
+  {
+    title: 'Direto da terra potiguar',
+    subtitle: 'Produtos artesanais com Selo Feito Potiguar — entrega em todo RN.',
+    emoji: '🌱',
+    bg: colors.brand[500],
+    fg: colors.ink.inverse,
+    accent: colors.brand[100],
+  },
+  {
+    title: 'Selo Feito Potiguar',
+    subtitle: 'Curadoria oficial: SEBRAE/RN, FAERN, FIERN e FECOMÉRCIO validam cada loja.',
+    emoji: '🏅',
+    bg: colors.gold[300],
+    fg: colors.ink.primary,
+    accent: colors.gold[500],
+  },
+  {
+    title: 'Comprou, chegou.',
+    subtitle: 'Entrega na Grande Natal e RN inteiro · pagamento por Pix sem taxa.',
+    emoji: '🚚',
+    bg: colors.accent[400],
+    fg: colors.ink.inverse,
+    accent: colors.accent[100],
+  },
+];
+
+interface Section {
+  title: string;
+  subtitle: string;
+  emoji: string;
+  type: DBSupplier['type'];
+}
+
+const SECTIONS: Section[] = [
+  {
+    title: 'Produtores e agroindústrias',
+    subtitle: 'Direto da roça pra sua mesa',
+    emoji: '🌾',
+    type: 'producer',
+  },
+  {
+    title: 'Bares e restaurantes',
+    subtitle: 'Pra comer no local ou pedir em casa',
+    emoji: '🍴',
+    type: 'restaurant',
+  },
+  {
+    title: 'Hotelaria',
+    subtitle: 'Hospedagem com DNA potiguar',
+    emoji: '🏨',
+    type: 'hospitality',
+  },
+];
+
 export function HomeScreen({ navigation }: Props) {
   const { user } = useAuth();
   const greetingName = user?.user_metadata?.full_name?.split(' ')[0] ?? 'visitante';
 
+  const { width } = useWindowDimensions();
+  const bannerWidth = width - 32; // 16 de margin de cada lado
+
   const [suppliers, setSuppliers] = useState<DBSupplier[]>([]);
+  const [popular, setPopular] = useState<DBSupplier[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const bannerRef = useRef<ScrollView>(null);
 
   async function load() {
-    const list = await listActiveSuppliers();
+    const promises: [Promise<DBSupplier[]>, Promise<DBSupplier[]>, Promise<number>] = [
+      listActiveSuppliers(),
+      listPopularSuppliers(10),
+      user ? unreadNotificationsCount(user.id) : Promise.resolve(0),
+    ];
+    const [list, top, unread] = await Promise.all(promises);
     setSuppliers(list);
+    setPopular(top);
+    setUnreadCount(unread);
     setLoading(false);
     setRefreshing(false);
   }
 
+  // Reatualiza o badge de não-lidas ao voltar do NotificationsScreen
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        unreadNotificationsCount(user.id).then(setUnreadCount);
+      }
+    }, [user]),
+  );
+
   useEffect(() => {
     load();
   }, []);
+
+  const grouped = useMemo(() => {
+    const map: Record<DBSupplier['type'], DBSupplier[]> = {
+      producer: [],
+      restaurant: [],
+      hospitality: [],
+    };
+    for (const s of suppliers) {
+      if (s.type in map) map[s.type].push(s);
+    }
+    return map;
+  }, [suppliers]);
 
   function onRefresh() {
     setRefreshing(true);
     load();
   }
 
+  // Auto-rotate dos banners a cada 5s (PRD §8.11)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setBannerIndex((prev) => {
+        const next = (prev + 1) % BANNER_SLIDES.length;
+        bannerRef.current?.scrollTo({ x: next * bannerWidth, animated: true });
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(id);
+  }, [bannerWidth]);
+
+  function handleBannerScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const idx = Math.round(e.nativeEvent.contentOffset.x / bannerWidth);
+    setBannerIndex(idx);
+  }
+
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
-      <FlatList
-        data={loading ? [] : suppliers}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <View>
-            <View style={styles.header}>
-              <Text style={styles.brand}>🌱 Da Terra</Text>
-              <Text style={styles.greeting}>Olá, {greetingName}</Text>
-              <Text style={styles.address}>📍 Rio Grande do Norte</Text>
-            </View>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <Text style={styles.brand}>🌱 Da Terra</Text>
+            <Pressable
+              onPress={() => navigation.navigate('Notifications')}
+              style={styles.bellBtn}
+              hitSlop={6}
+              accessibilityLabel="Notificações"
+            >
+              <Text style={styles.bellIcon}>🔔</Text>
+              {unreadCount > 0 && (
+                <View style={styles.bellBadge}>
+                  <Text style={styles.bellBadgeText}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
+          <Text style={styles.greeting}>Olá, {greetingName}</Text>
+          <Text style={styles.address}>📍 Rio Grande do Norte</Text>
+        </View>
 
-            <Text style={styles.sectionTitle}>Categorias</Text>
+        <Text style={styles.sectionTitle}>Categorias</Text>
+        <View style={styles.categories}>
+          {FEITO_POTIGUAR_CATEGORIES.slice(0, 3).map((cat) => (
+            <Pressable key={cat.slug} style={styles.categoryItem}>
+              <View style={styles.categoryIconBox}>
+                <Text style={styles.categoryIcon}>{cat.icon}</Text>
+              </View>
+              <Text style={styles.categoryLabel} numberOfLines={2}>
+                {cat.label}
+              </Text>
+            </Pressable>
+          ))}
+          <Pressable
+            style={styles.categoryItem}
+            onPress={() => navigation.navigate('CategoriesModal')}
+          >
+            <View style={[styles.categoryIconBox, styles.categoryIconBoxMore]}>
+              <Text style={styles.categoryIconMore}>⊞</Text>
+            </View>
+            <Text style={styles.categoryLabel} numberOfLines={2}>
+              Ver mais
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.bannerWrap}>
+          <ScrollView
+            ref={bannerRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleBannerScroll}
+          >
+            {BANNER_SLIDES.map((slide, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.bannerSlide,
+                  { width: bannerWidth, backgroundColor: slide.bg },
+                ]}
+              >
+                <Text style={styles.bannerEmoji}>{slide.emoji}</Text>
+                <Text style={[styles.bannerTitle, { color: slide.fg }]}>{slide.title}</Text>
+                <Text style={[styles.bannerSubtitle, { color: slide.accent }]}>
+                  {slide.subtitle}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+          <View style={styles.dots}>
+            {BANNER_SLIDES.map((_, i) => (
+              <View
+                key={i}
+                style={[styles.dot, i === bannerIndex && styles.dotActive]}
+              />
+            ))}
+          </View>
+        </View>
+
+        {!loading && popular.length > 0 && (
+          <View style={styles.popularBlock}>
+            <View style={styles.popularHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.popularTitle}>🔥 Mais pedidos no Da Terra</Text>
+                <Text style={styles.popularSubtitle}>Os favoritos da galera potiguar</Text>
+              </View>
+            </View>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              style={styles.categories}
+              contentContainerStyle={styles.popularScroll}
             >
-              {FEITO_POTIGUAR_CATEGORIES.map((cat) => (
-                <Pressable key={cat.slug} style={styles.categoryItem}>
-                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                  <Text style={styles.categoryLabel}>{cat.label}</Text>
+              {popular.map((item, idx) => (
+                <Pressable
+                  key={item.id}
+                  style={styles.popularItem}
+                  onPress={() =>
+                    navigation.navigate('Store', { supplierId: item.id })
+                  }
+                >
+                  <View style={styles.popularAvatar}>
+                    {item.cover_url ? (
+                      <Image
+                        source={{ uri: item.cover_url }}
+                        style={styles.popularAvatarImg}
+                      />
+                    ) : (
+                      <Text style={styles.popularAvatarPlaceholder}>
+                        {emojiForType(item.type)}
+                      </Text>
+                    )}
+                    {idx < 3 && (
+                      <View style={styles.popularRank}>
+                        <Text style={styles.popularRankText}>#{idx + 1}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.popularName} numberOfLines={2}>
+                    {item.name}
+                  </Text>
                 </Pressable>
               ))}
             </ScrollView>
-
-            <View style={styles.banner}>
-              <Text style={styles.bannerTitle}>Direto da terra potiguar.</Text>
-              <Text style={styles.bannerSubtitle}>
-                Produtos artesanais com Selo Feito Potiguar — entrega em todo RN.
-              </Text>
-            </View>
-
-            <Text style={styles.sectionTitle}>Destaques Potiguares</Text>
-            {loading && (
-              <ActivityIndicator color={colors.brand[500]} style={{ marginTop: 24 }} />
-            )}
           </View>
-        }
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.card}
-            onPress={() => navigation.navigate('Store', { supplierId: item.id })}
-          >
-            <View style={styles.cardImage}>
-              {item.cover_url ? (
-                <Image source={{ uri: item.cover_url }} style={styles.cardImageInner} />
-              ) : (
-                <Text style={styles.cardImagePlaceholder}>🌱</Text>
-              )}
-              <View style={styles.seloBadge}>
-                <Text style={styles.seloBadgeText}>🏅 Feito Potiguar</Text>
-              </View>
-            </View>
-            <View style={styles.cardBody}>
-              <Text style={styles.cardName} numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text style={styles.cardMeta} numberOfLines={1}>
-                {item.city ?? '—'} · {labelForCategory(item.primary_category)}
-              </Text>
-            </View>
-          </Pressable>
         )}
-        ListEmptyComponent={
-          !loading ? (
-            <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>🌱</Text>
-              <Text style={styles.emptyTitle}>Ainda não temos parceiros ativos aqui</Text>
-              <Text style={styles.emptySubtitle}>
-                Os fornecedores estão sendo validados pela equipe Da Terra. Em breve vão aparecer
-                nessa lista.
-              </Text>
-            </View>
-          ) : null
-        }
-        contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      />
+
+        <Text style={styles.sectionTitleMain}>Destaques Potiguares</Text>
+
+        {loading ? (
+          <ActivityIndicator color={colors.brand[500]} style={{ marginTop: 24 }} />
+        ) : suppliers.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyEmoji}>🌱</Text>
+            <Text style={styles.emptyTitle}>Ainda não temos parceiros ativos aqui</Text>
+            <Text style={styles.emptySubtitle}>
+              Os fornecedores estão sendo validados pela equipe Da Terra. Em breve vão aparecer
+              nessa lista.
+            </Text>
+          </View>
+        ) : (
+          SECTIONS.map((section) => {
+            const list = grouped[section.type];
+            if (list.length === 0) return null;
+            return (
+              <View key={section.type} style={styles.sectionBlock}>
+                <View style={styles.sectionHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.subsectionTitle}>
+                      {section.emoji} {section.title}
+                    </Text>
+                    <Text style={styles.subsectionSubtitle}>{section.subtitle}</Text>
+                  </View>
+                  <Text style={styles.sectionCount}>{list.length}</Text>
+                </View>
+                <View style={styles.rowList}>
+                  {list.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      style={styles.row}
+                      onPress={() =>
+                        navigation.navigate('Store', { supplierId: item.id })
+                      }
+                    >
+                      <View style={styles.rowImage}>
+                        {item.cover_url ? (
+                          <Image source={{ uri: item.cover_url }} style={styles.rowImageInner} />
+                        ) : (
+                          <Text style={styles.rowImagePlaceholder}>{section.emoji}</Text>
+                        )}
+                      </View>
+                      <View style={styles.rowBody}>
+                        <View style={styles.seloPill}>
+                          <Text style={styles.seloPillText}>🏅 Feito Potiguar</Text>
+                        </View>
+                        <Text style={styles.rowName} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                        <Text style={styles.rowMeta} numberOfLines={1}>
+                          📍 {item.city ?? '—'}
+                          {item.primary_category
+                            ? ` · ${labelForCategory(item.primary_category)}`
+                            : ''}
+                        </Text>
+                      </View>
+                      <Text style={styles.rowChevron}>›</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 function labelForCategory(slug: string | null): string {
-  if (!slug) return 'Diversos';
+  if (!slug) return '';
   const found = FEITO_POTIGUAR_CATEGORIES.find((c) => c.slug === slug);
-  return found?.label ?? 'Diversos';
+  return found?.label ?? '';
+}
+
+function emojiForType(type: DBSupplier['type']): string {
+  switch (type) {
+    case 'producer':
+      return '🌾';
+    case 'restaurant':
+      return '🍴';
+    case 'hospitality':
+      return '🏨';
+    default:
+      return '🌱';
+  }
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.sand[50] },
-  listContent: { paddingBottom: 24 },
+  scroll: { paddingBottom: 24 },
   header: { paddingHorizontal: 20, paddingTop: 12, marginBottom: 16 },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
   brand: {
     fontSize: 22,
     fontWeight: typography.fontWeight.semibold,
     color: colors.brand[500],
-    marginBottom: 12,
+  },
+  bellBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  bellIcon: { fontSize: 18 },
+  bellBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.status.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+    borderWidth: 2,
+    borderColor: colors.sand[50],
+  },
+  bellBadgeText: {
+    color: colors.ink.inverse,
+    fontSize: 11,
+    fontWeight: typography.fontWeight.bold,
+    lineHeight: 14,
   },
   greeting: { fontSize: 16, color: colors.ink.primary },
   address: { marginTop: 4, fontSize: 14, color: colors.ink.secondary },
+
   sectionTitle: {
     paddingHorizontal: 20,
     marginTop: 8,
@@ -155,62 +449,235 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
     color: colors.brand[700],
   },
-  categories: { paddingHorizontal: 12, marginBottom: 24 },
-  categoryItem: { width: 84, alignItems: 'center', marginHorizontal: 8 },
-  categoryIcon: { fontSize: 36, marginBottom: 6 },
-  categoryLabel: { fontSize: 12, textAlign: 'center', color: colors.ink.primary },
-  banner: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-    padding: 24,
-    borderRadius: 24,
-    backgroundColor: colors.brand[500],
-  },
-  bannerTitle: {
+  sectionTitleMain: {
+    paddingHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 4,
     fontSize: 22,
     fontWeight: typography.fontWeight.bold,
-    color: colors.ink.inverse,
-    marginBottom: 8,
+    color: colors.brand[700],
   },
-  bannerSubtitle: { fontSize: 14, color: colors.brand[100], lineHeight: 20 },
 
-  card: {
-    marginHorizontal: 20,
-    marginBottom: 16,
-    backgroundColor: colors.surface.primary,
+  categories: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    marginBottom: 24,
+    justifyContent: 'space-between',
+  },
+  categoryItem: { flex: 1, alignItems: 'center' },
+  categoryIconBox: {
+    width: 72,
+    height: 72,
     borderRadius: 20,
+    backgroundColor: colors.surface.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  categoryIconBoxMore: {
+    backgroundColor: colors.brand[50],
+    borderWidth: 1,
+    borderColor: colors.brand[100],
+  },
+  categoryIcon: { fontSize: 34 },
+  categoryIconMore: {
+    fontSize: 30,
+    color: colors.brand[600],
+    fontWeight: typography.fontWeight.semibold,
+  },
+  categoryLabel: {
+    fontSize: 11,
+    textAlign: 'center',
+    color: colors.ink.primary,
+    lineHeight: 14,
+  },
+
+  bannerWrap: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 24,
     overflow: 'hidden',
   },
-  cardImage: {
-    aspectRatio: 16 / 9,
+  bannerSlide: {
+    minHeight: 220,
+    paddingHorizontal: 28,
+    paddingVertical: 28,
+    justifyContent: 'center',
+    borderRadius: 24,
+  },
+  bannerEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  bannerTitle: {
+    fontSize: 26,
+    fontWeight: typography.fontWeight.bold,
+    marginBottom: 8,
+    lineHeight: 32,
+  },
+  bannerSubtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    maxWidth: '85%',
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.sand[300],
+  },
+  dotActive: {
+    width: 18,
+    backgroundColor: colors.brand[500],
+  },
+
+  popularBlock: { marginTop: 8, marginBottom: 8 },
+  popularHeader: { paddingHorizontal: 20, marginBottom: 10 },
+  popularTitle: {
+    fontSize: 16,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.ink.primary,
+  },
+  popularSubtitle: {
+    fontSize: 12,
+    color: colors.ink.secondary,
+    marginTop: 2,
+  },
+  popularScroll: { paddingHorizontal: 16, gap: 14 },
+  popularItem: { width: 84, alignItems: 'center', marginRight: 4 },
+  popularAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: colors.sand[100],
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: colors.gold[100],
+    position: 'relative',
   },
-  cardImageInner: { width: '100%', height: '100%' },
-  cardImagePlaceholder: { fontSize: 56 },
-  seloBadge: {
+  popularAvatarImg: { width: '100%', height: '100%' },
+  popularAvatarPlaceholder: { fontSize: 32 },
+  popularRank: {
     position: 'absolute',
-    bottom: 12,
-    left: 12,
+    top: -4,
+    right: -4,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: colors.gold[300],
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
   },
-  seloBadgeText: {
+  popularRankText: {
     color: colors.ink.inverse,
-    fontSize: 12,
-    fontWeight: typography.fontWeight.semibold,
+    fontSize: 11,
+    fontWeight: typography.fontWeight.bold,
   },
-  cardBody: { padding: 16 },
-  cardName: {
-    fontSize: 18,
+  popularName: {
+    fontSize: 12,
+    color: colors.ink.primary,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+
+  sectionBlock: { marginTop: 16 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  subsectionTitle: {
+    fontSize: 16,
     fontWeight: typography.fontWeight.semibold,
     color: colors.ink.primary,
+  },
+  subsectionSubtitle: {
+    fontSize: 12,
+    color: colors.ink.secondary,
+    marginTop: 2,
+  },
+  sectionCount: {
+    fontSize: 12,
+    color: colors.ink.tertiary,
+    backgroundColor: colors.sand[100],
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+
+  rowList: {
+    backgroundColor: colors.surface.primary,
+    marginHorizontal: 16,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.sand[200],
+    gap: 12,
+  },
+  rowImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: colors.sand[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  rowImageInner: { width: '100%', height: '100%' },
+  rowImagePlaceholder: { fontSize: 28 },
+  rowBody: { flex: 1 },
+  seloPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.gold[100],
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 999,
     marginBottom: 4,
   },
-  cardMeta: { fontSize: 13, color: colors.ink.secondary },
+  seloPillText: {
+    color: colors.gold[500],
+    fontSize: 10,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  rowName: {
+    fontSize: 15,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.ink.primary,
+    marginBottom: 2,
+  },
+  rowMeta: {
+    fontSize: 12,
+    color: colors.ink.secondary,
+  },
+  rowChevron: {
+    fontSize: 22,
+    color: colors.ink.tertiary,
+    marginLeft: 4,
+  },
 
   empty: {
     paddingHorizontal: 40,

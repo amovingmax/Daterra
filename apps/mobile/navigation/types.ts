@@ -1,15 +1,19 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { Signup } from '@daterra/shared';
+import type { DBAddress } from '../lib/supabase';
 
 export type HomeStackParamList = {
   Home: undefined;
   Store: { supplierId: string };
   ProductDetail: { productId: string };
+  Notifications: undefined;
+  CategoriesModal: undefined;
 };
 
 export type CartStackParamList = {
   Cart: undefined;
   Checkout: undefined;
+  CheckoutAddressForm: { address?: DBAddress };
   OrderConfirmation: { orderId: string };
 };
 
@@ -18,10 +22,20 @@ export type OrdersStackParamList = {
   OrderDetail: { orderId: string };
 };
 
+export type ProfileStackParamList = {
+  Profile: undefined;
+  EditProfile: undefined;
+  Addresses: undefined;
+  AddressForm: { address?: DBAddress };
+  About: undefined;
+};
+
 export type MainTabParamList = {
   HomeTab: NavigatorScreenParams<HomeStackParamList>;
+  SuperTab: undefined;
   CartTab: NavigatorScreenParams<CartStackParamList>;
   OrdersTab: NavigatorScreenParams<OrdersStackParamList>;
+  ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
 };
 
 export type AuthStackParamList = {

@@ -60,12 +60,17 @@ export function LoginScreen(_: Props) {
           value={password}
           onChangeText={setPassword}
           placeholder="••••••••"
+          rightAdornment={
+            <Pressable
+              onPress={() => setShowPassword((s) => !s)}
+              hitSlop={8}
+              style={styles.eyeBtn}
+              accessibilityLabel={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+            >
+              <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
+            </Pressable>
+          }
         />
-        <Pressable onPress={() => setShowPassword((s) => !s)} hitSlop={8}>
-          <Text style={styles.toggleShow}>
-            {showPassword ? 'Esconder senha' : 'Mostrar senha'}
-          </Text>
-        </Pressable>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -96,10 +101,12 @@ const styles = StyleSheet.create({
   form: {
     marginTop: 8,
   },
-  toggleShow: {
-    color: colors.brand[500],
-    fontSize: 13,
-    marginBottom: 12,
+  eyeBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  eyeIcon: {
+    fontSize: 18,
   },
   error: {
     color: colors.status.danger,

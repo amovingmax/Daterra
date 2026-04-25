@@ -17,17 +17,27 @@ import { SignupStep2Screen } from './screens/auth/SignupStep2Screen';
 import { HomeScreen } from './screens/HomeScreen';
 import { StoreScreen } from './screens/StoreScreen';
 import { ProductDetailScreen } from './screens/ProductDetailScreen';
+import { NotificationsScreen } from './screens/NotificationsScreen';
+import { CategoriesModalScreen } from './screens/CategoriesModalScreen';
 import { CartScreen } from './screens/CartScreen';
 import { CheckoutScreen } from './screens/CheckoutScreen';
+import { CheckoutAddressFormScreen } from './screens/CheckoutAddressFormScreen';
 import { OrderConfirmationScreen } from './screens/OrderConfirmationScreen';
 import { OrdersListScreen } from './screens/OrdersListScreen';
 import { OrderDetailScreen } from './screens/OrderDetailScreen';
+import { SuperScreen } from './screens/SuperScreen';
+import { ProfileScreen } from './screens/profile/ProfileScreen';
+import { EditProfileScreen } from './screens/profile/EditProfileScreen';
+import { AddressesListScreen } from './screens/profile/AddressesListScreen';
+import { AddressFormScreen } from './screens/profile/AddressFormScreen';
+import { AboutScreen } from './screens/profile/AboutScreen';
 import type {
   AuthStackParamList,
   CartStackParamList,
   HomeStackParamList,
   MainTabParamList,
   OrdersStackParamList,
+  ProfileStackParamList,
 } from './navigation/types';
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -37,6 +47,12 @@ function HomeStackNavigator() {
       <HomeStack.Screen name="Home" component={HomeScreen} />
       <HomeStack.Screen name="Store" component={StoreScreen} />
       <HomeStack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <HomeStack.Screen name="Notifications" component={NotificationsScreen} />
+      <HomeStack.Screen
+        name="CategoriesModal"
+        component={CategoriesModalScreen}
+        options={{ presentation: 'modal' }}
+      />
     </HomeStack.Navigator>
   );
 }
@@ -47,6 +63,7 @@ function CartStackNavigator() {
     <CartStack.Navigator screenOptions={{ headerShown: false }}>
       <CartStack.Screen name="Cart" component={CartScreen} />
       <CartStack.Screen name="Checkout" component={CheckoutScreen} />
+      <CartStack.Screen name="CheckoutAddressForm" component={CheckoutAddressFormScreen} />
       <CartStack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
     </CartStack.Navigator>
   );
@@ -59,6 +76,19 @@ function OrdersStackNavigator() {
       <OrdersStack.Screen name="OrdersList" component={OrdersListScreen} />
       <OrdersStack.Screen name="OrderDetail" component={OrderDetailScreen} />
     </OrdersStack.Navigator>
+  );
+}
+
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
+function ProfileStackNavigator() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="Profile" component={ProfileScreen} />
+      <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
+      <ProfileStack.Screen name="Addresses" component={AddressesListScreen} />
+      <ProfileStack.Screen name="AddressForm" component={AddressFormScreen} />
+      <ProfileStack.Screen name="About" component={AboutScreen} />
+    </ProfileStack.Navigator>
   );
 }
 
@@ -103,11 +133,27 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
+        name="SuperTab"
+        component={SuperScreen}
+        options={{
+          tabBarLabel: 'Super',
+          tabBarIcon: ({ focused }) => <TabIcon icon="⚡" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
         name="OrdersTab"
         component={OrdersStackNavigator}
         options={{
           tabBarLabel: 'Pedidos',
           tabBarIcon: ({ focused }) => <TabIcon icon="📦" focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileStackNavigator}
+        options={{
+          tabBarLabel: 'Perfil',
+          tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
         }}
       />
     </Tab.Navigator>

@@ -26,3 +26,4 @@ export type DBProduct = Database['public']['Tables']['products']['Row'];
 export type DBOrder = Database['public']['Tables']['orders']['Row'];
 export type DBOrderItem = Database['public']['Tables']['order_items']['Row'];
 export type DBAddress = Database['public']['Tables']['addresses']['Row'];
+export type DBNotification = Database['public']['Tables']['notifications']['Row'];

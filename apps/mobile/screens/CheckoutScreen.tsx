@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
@@ -34,15 +35,33 @@ export function CheckoutScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
+  const reloadAddresses = useCallback(async () => {
     if (!user) return;
-    listMyAddresses(user.id).then((list) => {
-      setAddresses(list);
-      const primary = list.find((a) => a.is_primary) ?? list[0];
-      if (primary) setSelectedAddressId(primary.id);
-      setLoading(false);
+    const list = await listMyAddresses(user.id);
+    setAddresses((prev) => {
+      // Auto-seleciona o endereço novo (que não estava na lista anterior),
+      // ou mantém a seleção atual, ou cai pro primary.
+      const newOne = list.find((a) => !prev.some((p) => p.id === a.id));
+      if (newOne) setSelectedAddressId(newOne.id);
+      else if (!selectedAddressId) {
+        const primary = list.find((a) => a.is_primary) ?? list[0];
+        if (primary) setSelectedAddressId(primary.id);
+      }
+      return list;
     });
+    setLoading(false);
+  }, [user, selectedAddressId]);
+
+  useEffect(() => {
+    reloadAddresses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadAddresses();
+    }, [reloadAddresses]),
+  );
 
   const deliveryCents = deliveryMode === 'pickup' ? 0 : DELIVERY_FEE_CENTS;
   const totalCents = subtotalCents + deliveryCents;
@@ -120,7 +139,7 @@ export function CheckoutScreen({ navigation }: Props) {
           <Section title="Endereço de entrega">
             {addresses.length === 0 ? (
               <Text style={styles.subtle}>
-                Nenhum endereço cadastrado. Volte e atualize seu perfil.
+                Nenhum endereço cadastrado. Adicione um abaixo.
               </Text>
             ) : (
               addresses.map((a) => (
@@ -133,6 +152,12 @@ export function CheckoutScreen({ navigation }: Props) {
                 />
               ))
             )}
+            <Pressable
+              onPress={() => navigation.navigate('CheckoutAddressForm', {})}
+              style={styles.addAddressBtn}
+            >
+              <Text style={styles.addAddressBtnText}>+ Adicionar novo endereço</Text>
+            </Pressable>
           </Section>
         )}
 
@@ -267,6 +292,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand[50],
   },
   optionDisabled: { opacity: 0.5 },
+  addAddressBtn: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  addAddressBtnText: {
+    color: colors.brand[500],
+    fontWeight: typography.fontWeight.medium,
+    fontSize: 14,
+  },
   radio: {
     width: 20,
     height: 20,

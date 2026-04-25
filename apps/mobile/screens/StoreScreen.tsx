@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
@@ -20,6 +20,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'Store'>;
 
 export function StoreScreen({ route, navigation }: Props) {
   const { supplierId } = route.params;
+  const insets = useSafeAreaInsets();
   const [supplier, setSupplier] = useState<DBSupplier | null>(null);
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +67,11 @@ export function StoreScreen({ route, navigation }: Props) {
               ) : (
                 <Text style={styles.coverPlaceholder}>🌱</Text>
               )}
-              <Pressable style={styles.backFab} onPress={() => navigation.goBack()}>
+              <Pressable
+                style={[styles.backFab, { top: insets.top + 8 }]}
+                onPress={() => navigation.goBack()}
+                hitSlop={8}
+              >
                 <Text style={styles.backFabIcon}>←</Text>
               </Pressable>
             </View>
@@ -152,14 +157,18 @@ const styles = StyleSheet.create({
   coverPlaceholder: { fontSize: 64 },
   backFab: {
     position: 'absolute',
-    top: 16,
     left: 16,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   backFabIcon: {
     fontSize: 20,

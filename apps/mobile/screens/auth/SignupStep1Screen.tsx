@@ -16,6 +16,7 @@ export function SignupStep1Screen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -87,16 +88,26 @@ export function SignupStep1Screen({ navigation }: Props) {
         />
         <Input
           label="Senha"
-          secureTextEntry
+          secureTextEntry={!showPassword}
           autoComplete="password-new"
           value={password}
           onChangeText={setPassword}
           placeholder="Mínimo 8 caracteres com 1 número"
           error={errors.password}
+          rightAdornment={
+            <Pressable
+              onPress={() => setShowPassword((s) => !s)}
+              hitSlop={8}
+              style={styles.eyeBtn}
+              accessibilityLabel={showPassword ? 'Esconder senha' : 'Mostrar senha'}
+            >
+              <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
+            </Pressable>
+          }
         />
         <Input
           label="Confirmar senha"
-          secureTextEntry
+          secureTextEntry={!showPassword}
           autoComplete="password-new"
           value={passwordConfirm}
           onChangeText={setPasswordConfirm}
@@ -195,5 +206,12 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: 16,
+  },
+  eyeBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  eyeIcon: {
+    fontSize: 18,
   },
 });

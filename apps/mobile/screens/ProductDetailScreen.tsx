@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -26,6 +26,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'ProductDetail'>;
 
 export function ProductDetailScreen({ route, navigation }: Props) {
   const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+  const insets = useSafeAreaInsets();
   const { productId } = route.params;
   const { addItem, forceReplace } = useCart();
 
@@ -114,7 +115,11 @@ export function ProductDetailScreen({ route, navigation }: Props) {
           ) : (
             <Text style={styles.galleryPlaceholder}>🥫</Text>
           )}
-          <Pressable style={styles.backFab} onPress={() => navigation.goBack()}>
+          <Pressable
+            style={[styles.backFab, { top: insets.top + 8 }]}
+            onPress={() => navigation.goBack()}
+            hitSlop={8}
+          >
             <Text style={styles.backFabIcon}>←</Text>
           </Pressable>
         </View>
@@ -216,12 +221,16 @@ const styles = StyleSheet.create({
   galleryPlaceholder: { fontSize: 96 },
   backFab: {
     position: 'absolute',
-    top: 50,
     left: 16,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
