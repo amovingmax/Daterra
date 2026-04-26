@@ -96,14 +96,14 @@ export function ProductDetailScreen({ route, navigation }: Props) {
             style: 'destructive',
             onPress: () => {
               forceReplace(itemBase, quantity, supplier.name);
-              tabNav.navigate('CartTab', { screen: 'Cart' });
+              navigation.navigate('Cart');
             },
           },
         ],
       );
       return;
     }
-    tabNav.navigate('CartTab', { screen: 'Cart' });
+    navigation.navigate('Cart');
   }
 
   return (

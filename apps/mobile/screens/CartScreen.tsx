@@ -15,9 +15,9 @@ import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Button } from '../components/Button';
 import { useCart } from '../lib/cart-context';
-import type { CartStackParamList, MainTabParamList } from '../navigation/types';
+import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 
-type Props = NativeStackScreenProps<CartStackParamList, 'Cart'>;
+type Props = NativeStackScreenProps<HomeStackParamList, 'Cart'>;
 
 export function CartScreen({ navigation }: Props) {
   const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();

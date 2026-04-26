@@ -18,9 +18,9 @@ import { useAuth } from '../lib/auth-context';
 import { useCart } from '../lib/cart-context';
 import { createOrder, listMyAddresses } from '../lib/queries';
 import type { DBAddress } from '../lib/supabase';
-import type { CartStackParamList } from '../navigation/types';
+import type { HomeStackParamList } from '../navigation/types';
 
-type Props = NativeStackScreenProps<CartStackParamList, 'Checkout'>;
+type Props = NativeStackScreenProps<HomeStackParamList, 'Checkout'>;
 
 const DELIVERY_FEE_CENTS = 1200; // simulado pra MVP
 

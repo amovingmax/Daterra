@@ -13,6 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { getSupplier, listSupplierProducts } from '../lib/queries';
+import { CartBar } from '../components/CartBar';
 import type { DBProduct, DBSupplier } from '../lib/supabase';
 import type { HomeStackParamList } from '../navigation/types';
 
@@ -133,6 +134,7 @@ export function StoreScreen({ route, navigation }: Props) {
         }
         contentContainerStyle={styles.listContent}
       />
+      <CartBar onPress={() => navigation.navigate('Cart')} />
     </SafeAreaView>
   );
 }

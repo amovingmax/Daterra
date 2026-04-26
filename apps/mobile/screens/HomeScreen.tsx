@@ -23,6 +23,7 @@ import {
   listPopularSuppliers,
   unreadNotificationsCount,
 } from '../lib/queries';
+import { CartBar } from '../components/CartBar';
 import type { DBSupplier } from '../lib/supabase';
 import type { HomeStackParamList } from '../navigation/types';
 
@@ -370,6 +371,7 @@ export function HomeScreen({ navigation }: Props) {
           })
         )}
       </ScrollView>
+      <CartBar onPress={() => navigation.navigate('Cart')} />
     </SafeAreaView>
   );
 }

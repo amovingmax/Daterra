@@ -8,9 +8,9 @@ import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Button } from '../components/Button';
 import { supabase, type DBOrder } from '../lib/supabase';
-import type { CartStackParamList, MainTabParamList } from '../navigation/types';
+import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 
-type Props = NativeStackScreenProps<CartStackParamList, 'OrderConfirmation'>;
+type Props = NativeStackScreenProps<HomeStackParamList, 'OrderConfirmation'>;
 
 export function OrderConfirmationScreen({ route }: Props) {
   const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();

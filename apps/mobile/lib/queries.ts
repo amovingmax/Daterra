@@ -18,6 +18,28 @@ export async function listActiveSuppliers(): Promise<DBSupplier[]> {
   return data ?? [];
 }
 
+export interface SearchFilters {
+  query?: string;
+  type?: DBSupplier['type'] | null;
+  category?: string | null;
+}
+
+/** Busca fornecedores ativos com filtros (nome/cidade/descrição + tipo + categoria). */
+export async function searchSuppliers(filters: SearchFilters): Promise<DBSupplier[]> {
+  let q = supabase.from('suppliers').select('*').eq('is_active', true);
+
+  if (filters.type) q = q.eq('type', filters.type);
+  if (filters.category) q = q.eq('primary_category', filters.category);
+
+  if (filters.query && filters.query.trim().length > 0) {
+    const term = filters.query.trim().replace(/[%_]/g, '');
+    q = q.or(`name.ilike.%${term}%,city.ilike.%${term}%,description.ilike.%${term}%`);
+  }
+
+  const { data } = await q.order('name').limit(50);
+  return data ?? [];
+}
+
 export interface PromotionItem extends DBProduct {
   supplier_name: string;
   supplier_city: string | null;

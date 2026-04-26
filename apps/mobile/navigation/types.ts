@@ -8,13 +8,15 @@ export type HomeStackParamList = {
   ProductDetail: { productId: string };
   Notifications: undefined;
   CategoriesModal: undefined;
-};
-
-export type CartStackParamList = {
+  // Cart flow agora vive aqui — acessível de qualquer tela do home stack
   Cart: undefined;
   Checkout: undefined;
   CheckoutAddressForm: { address?: DBAddress };
   OrderConfirmation: { orderId: string };
+};
+
+export type SearchStackParamList = {
+  Search: undefined;
 };
 
 export type OrdersStackParamList = {
@@ -32,8 +34,8 @@ export type ProfileStackParamList = {
 
 export type MainTabParamList = {
   HomeTab: NavigatorScreenParams<HomeStackParamList>;
+  SearchTab: NavigatorScreenParams<SearchStackParamList>;
   SuperTab: undefined;
-  CartTab: NavigatorScreenParams<CartStackParamList>;
   OrdersTab: NavigatorScreenParams<OrdersStackParamList>;
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
 };
@@ -46,7 +48,7 @@ export type AuthStackParamList = {
 };
 
 export type RootStackParamList = AuthStackParamList & MainTabParamList & {
-  Home: undefined; // legado — pra compatibilidade com telas antigas
+  Home: undefined;
 };
 
 declare global {

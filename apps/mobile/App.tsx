@@ -9,7 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors, typography } from '@daterra/ui/tokens';
 
 import { AuthProvider, useAuth } from './lib/auth-context';
-import { CartProvider, useCart } from './lib/cart-context';
+import { CartProvider } from './lib/cart-context';
 import { AuthHubScreen } from './screens/auth/AuthHubScreen';
 import { LoginScreen } from './screens/auth/LoginScreen';
 import { SignupStep1Screen } from './screens/auth/SignupStep1Screen';
@@ -26,6 +26,7 @@ import { OrderConfirmationScreen } from './screens/OrderConfirmationScreen';
 import { OrdersListScreen } from './screens/OrdersListScreen';
 import { OrderDetailScreen } from './screens/OrderDetailScreen';
 import { SuperScreen } from './screens/SuperScreen';
+import { SearchScreen } from './screens/SearchScreen';
 import { ProfileScreen } from './screens/profile/ProfileScreen';
 import { EditProfileScreen } from './screens/profile/EditProfileScreen';
 import { AddressesListScreen } from './screens/profile/AddressesListScreen';
@@ -33,11 +34,11 @@ import { AddressFormScreen } from './screens/profile/AddressFormScreen';
 import { AboutScreen } from './screens/profile/AboutScreen';
 import type {
   AuthStackParamList,
-  CartStackParamList,
   HomeStackParamList,
   MainTabParamList,
   OrdersStackParamList,
   ProfileStackParamList,
+  SearchStackParamList,
 } from './navigation/types';
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -53,19 +54,24 @@ function HomeStackNavigator() {
         component={CategoriesModalScreen}
         options={{ presentation: 'modal' }}
       />
+      {/* Cart agora é stack do Home — acessível de qualquer tela */}
+      <HomeStack.Screen name="Cart" component={CartScreen} />
+      <HomeStack.Screen name="Checkout" component={CheckoutScreen} />
+      <HomeStack.Screen
+        name="CheckoutAddressForm"
+        component={CheckoutAddressFormScreen}
+      />
+      <HomeStack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
     </HomeStack.Navigator>
   );
 }
 
-const CartStack = createNativeStackNavigator<CartStackParamList>();
-function CartStackNavigator() {
+const SearchStack = createNativeStackNavigator<SearchStackParamList>();
+function SearchStackNavigator() {
   return (
-    <CartStack.Navigator screenOptions={{ headerShown: false }}>
-      <CartStack.Screen name="Cart" component={CartScreen} />
-      <CartStack.Screen name="Checkout" component={CheckoutScreen} />
-      <CartStack.Screen name="CheckoutAddressForm" component={CheckoutAddressFormScreen} />
-      <CartStack.Screen name="OrderConfirmation" component={OrderConfirmationScreen} />
-    </CartStack.Navigator>
+    <SearchStack.Navigator screenOptions={{ headerShown: false }}>
+      <SearchStack.Screen name="Search" component={SearchScreen} />
+    </SearchStack.Navigator>
   );
 }
 
@@ -94,7 +100,6 @@ function ProfileStackNavigator() {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 function MainTabs() {
-  const { itemCount } = useCart();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -123,13 +128,11 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="CartTab"
-        component={CartStackNavigator}
+        name="SearchTab"
+        component={SearchStackNavigator}
         options={{
-          tabBarLabel: 'Sacola',
-          tabBarBadge: itemCount > 0 ? itemCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.accent[400] },
-          tabBarIcon: ({ focused }) => <TabIcon icon="🛒" focused={focused} />,
+          tabBarLabel: 'Busca',
+          tabBarIcon: ({ focused }) => <TabIcon icon="🔍" focused={focused} />,
         }}
       />
       <Tab.Screen
