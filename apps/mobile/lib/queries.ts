@@ -40,6 +40,42 @@ export async function searchSuppliers(filters: SearchFilters): Promise<DBSupplie
   return data ?? [];
 }
 
+/** Item de busca de produto que carrega dados básicos do fornecedor (categoria do
+ * Feito Potiguar vive no supplier). */
+export interface SearchProductItem extends DBProduct {
+  supplier_name: string;
+  supplier_city: string | null;
+  supplier_primary_category: string | null;
+}
+
+/** Busca produtos ativos cruzando com supplier para filtro por categoria do
+ * programa Feito Potiguar. Default da tela Busca: produtos primeiro. */
+export async function searchProducts(filters: SearchFilters): Promise<SearchProductItem[]> {
+  let q = supabase
+    .from('products')
+    .select(
+      'id, slug, name, description, price_cents, promo_price_cents, photos, supplier_id, is_active, sort_order, addons, category, created_at, ingredients, promo_ends_at, promo_starts_at, shelf_life_days, sku, source, source_url, stock, store_section, subcategory, updated_at, variations, weight_grams, suppliers!inner(name, city, primary_category, type, is_active)',
+    )
+    .eq('is_active', true)
+    .eq('suppliers.is_active', true);
+
+  if (filters.category) q = q.eq('suppliers.primary_category', filters.category);
+  if (filters.type) q = q.eq('suppliers.type', filters.type);
+
+  if (filters.query && filters.query.trim().length > 0) {
+    const term = filters.query.trim().replace(/[%_]/g, '');
+    q = q.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
+  }
+
+  const { data } = await q.order('name').limit(60);
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    supplier_name: row.suppliers?.name ?? '',
+    supplier_city: row.suppliers?.city ?? null,
+    supplier_primary_category: row.suppliers?.primary_category ?? null,
+  }));
+}
+
 export interface PromotionItem extends DBProduct {
   supplier_name: string;
   supplier_city: string | null;

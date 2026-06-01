@@ -3,12 +3,14 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FontAwesome } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
@@ -18,6 +20,42 @@ import type { DBProduct, DBSupplier } from '../lib/supabase';
 import type { HomeStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Store'>;
+
+const CATEGORY_FALLBACK: Record<DBSupplier['type'], string> = {
+  producer: 'Produtor',
+  restaurant: 'Restaurante',
+  hospitality: 'Hospedagem',
+};
+
+function onlyDigits(value: string) {
+  return value.replace(/\D+/g, '');
+}
+
+function buildWhatsappUrl(raw: string) {
+  let digits = onlyDigits(raw);
+  if (digits.length === 0) return null;
+  if (!digits.startsWith('55')) digits = `55${digits}`;
+  return `https://wa.me/${digits}`;
+}
+
+function buildInstagramUrl(raw: string) {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const handle = trimmed.replace(/^@/, '');
+  return `https://instagram.com/${handle}`;
+}
+
+function formatBRPhone(raw: string) {
+  const digits = onlyDigits(raw).replace(/^55/, '');
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  }
+  return raw;
+}
 
 export function StoreScreen({ route, navigation }: Props) {
   const { supplierId } = route.params;
@@ -55,6 +93,22 @@ export function StoreScreen({ route, navigation }: Props) {
     );
   }
 
+  const fullAddress = [
+    [supplier.street, supplier.number].filter(Boolean).join(', '),
+    supplier.complement,
+    supplier.district,
+    [supplier.city, supplier.state].filter(Boolean).join(' - '),
+    supplier.zip_code,
+  ]
+    .filter((part) => part && part.trim().length > 0)
+    .join(', ');
+
+  const categoryLabel = supplier.primary_category ?? CATEGORY_FALLBACK[supplier.type];
+
+  const whatsappUrl = supplier.whatsapp ? buildWhatsappUrl(supplier.whatsapp) : null;
+  const instagramUrl = supplier.instagram ? buildInstagramUrl(supplier.instagram) : null;
+  const phoneDisplay = supplier.whatsapp ? formatBRPhone(supplier.whatsapp) : null;
+
   return (
     <SafeAreaView style={styles.root} edges={['left', 'right']}>
       <FlatList
@@ -62,9 +116,13 @@ export function StoreScreen({ route, navigation }: Props) {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <View>
-            <View style={styles.cover}>
+            <View style={[styles.cover, { paddingTop: insets.top + 12, height: 260 + insets.top }]}>
               {supplier.cover_url ? (
-                <Image source={{ uri: supplier.cover_url }} style={styles.coverImage} />
+                <Image
+                  source={{ uri: supplier.cover_url }}
+                  style={styles.coverImage}
+                  resizeMode="contain"
+                />
               ) : (
                 <Text style={styles.coverPlaceholder}>🌱</Text>
               )}
@@ -85,9 +143,60 @@ export function StoreScreen({ route, navigation }: Props) {
                 {supplier.city}, {supplier.state}
               </Text>
               {supplier.description && (
-                <Text style={styles.supplierDescription} numberOfLines={4}>
-                  {supplier.description}
-                </Text>
+                <Text style={styles.supplierDescription}>{supplier.description}</Text>
+              )}
+
+              <View style={styles.infoList}>
+                {categoryLabel && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoIcon}>🏭</Text>
+                    <Text style={styles.infoText}>{categoryLabel}</Text>
+                  </View>
+                )}
+                {fullAddress.length > 0 && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoIcon}>📍</Text>
+                    <Text style={styles.infoText}>{fullAddress}</Text>
+                  </View>
+                )}
+                {supplier.city && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoIcon}>🗺️</Text>
+                    <Text style={styles.infoText}>{supplier.city}</Text>
+                  </View>
+                )}
+                {phoneDisplay && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoIcon}>📞</Text>
+                    <Text style={styles.infoText}>{phoneDisplay}</Text>
+                  </View>
+                )}
+              </View>
+
+              {(whatsappUrl || instagramUrl) && (
+                <View style={styles.contactSection}>
+                  <Text style={styles.contactTitle}>Contato</Text>
+                  <View style={styles.contactRow}>
+                    {whatsappUrl && (
+                      <Pressable
+                        style={styles.contactButton}
+                        onPress={() => Linking.openURL(whatsappUrl)}
+                        hitSlop={6}
+                      >
+                        <FontAwesome name="whatsapp" size={22} color={colors.ink.inverse} />
+                      </Pressable>
+                    )}
+                    {instagramUrl && (
+                      <Pressable
+                        style={styles.contactButton}
+                        onPress={() => Linking.openURL(instagramUrl)}
+                        hitSlop={6}
+                      >
+                        <FontAwesome name="instagram" size={22} color={colors.ink.inverse} />
+                      </Pressable>
+                    )}
+                  </View>
+                </View>
               )}
             </View>
             <Text style={styles.sectionTitle}>Produtos</Text>
@@ -211,6 +320,47 @@ const styles = StyleSheet.create({
     color: colors.ink.secondary,
     lineHeight: 20,
     marginTop: 12,
+  },
+  infoList: {
+    marginTop: 16,
+    gap: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  infoIcon: {
+    fontSize: 16,
+    width: 22,
+    textAlign: 'center',
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.ink.secondary,
+    lineHeight: 20,
+  },
+  contactSection: {
+    marginTop: 20,
+  },
+  contactTitle: {
+    fontSize: 16,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.ink.primary,
+    marginBottom: 10,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  contactButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.brand[500],
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionTitle: {
     paddingHorizontal: 20,

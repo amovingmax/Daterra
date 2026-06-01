@@ -13,7 +13,8 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
@@ -25,7 +26,7 @@ import {
 } from '../lib/queries';
 import { CartBar } from '../components/CartBar';
 import type { DBSupplier } from '../lib/supabase';
-import type { HomeStackParamList } from '../navigation/types';
+import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
@@ -94,8 +95,16 @@ const SECTIONS: Section[] = [
 ];
 
 export function HomeScreen({ navigation }: Props) {
+  const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const { user } = useAuth();
   const greetingName = user?.user_metadata?.full_name?.split(' ')[0] ?? 'visitante';
+
+  function openCategory(slug: string) {
+    tabNav.navigate('SearchTab', {
+      screen: 'Search',
+      params: { category: slug },
+    });
+  }
 
   const { width } = useWindowDimensions();
   const bannerWidth = width - 32; // 16 de margin de cada lado
@@ -201,7 +210,11 @@ export function HomeScreen({ navigation }: Props) {
         <Text style={styles.sectionTitle}>Categorias</Text>
         <View style={styles.categories}>
           {FEITO_POTIGUAR_CATEGORIES.slice(0, 3).map((cat) => (
-            <Pressable key={cat.slug} style={styles.categoryItem}>
+            <Pressable
+              key={cat.slug}
+              style={styles.categoryItem}
+              onPress={() => openCategory(cat.slug)}
+            >
               <View style={styles.categoryIconBox}>
                 <Text style={styles.categoryIcon}>{cat.icon}</Text>
               </View>

@@ -7,6 +7,7 @@ Pipeline:
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass
 
 from ..browser_act import BrowserActClient
@@ -56,6 +57,104 @@ TYPE_MAP: dict[str, SupplierType] = {
     "resort": "hospitality",
     "hospedagem": "hospitality",
 }
+
+# Mapeia o texto de tipo do site → slug de FEITO_POTIGUAR_CATEGORIES.
+# Ordem importa: "doces" antes de "conservas" pra label "Conservas, Doces e
+# Temperos" cair em doces-e-temperos (bate primeiro o termo mais específico
+# do programa). "alimentos prontos" antes de "alimentos naturais" pra mesma
+# razão.
+_CATEGORY_KEYWORDS: list[tuple[str, str]] = [
+    ("alimentos prontos", "alimentos-prontos"),
+    ("alimentos naturais", "alimentos-naturais"),
+    ("origem animal", "origem-animal"),
+    ("bebidas", "bebidas"),
+    ("doces", "doces-e-temperos"),
+    ("temperos", "doces-e-temperos"),
+    ("conservas", "conservas"),
+]
+
+# Word-sets para detectar categoria pelo NOME do fornecedor — mais específico
+# que o site_type_label genérico ("Agroindústria"/"Indústria"). Tudo aqui deve
+# estar lowercase e SEM ACENTOS — a comparação roda contra a versão
+# normalizada do nome (acentos removidos e CamelCase quebrado).
+_DOCES_TEMPEROS_WORDS: set[str] = {
+    "apiario", "apiarios", "apriario", "apriarios",
+    "apicultor", "apicultura", "apis",
+    "mel",
+    "doce", "doces", "doceria", "docerias",
+    "geleia", "geleias",
+    "rapadura", "rapaduras",
+    "bala", "balas", "pirulito", "pirulitos",
+    "cocada", "cocadas", "pacoca", "pacocas", "goiabada", "goiabadas",
+    "tempero", "temperos", "condimento", "condimentos",
+    "pimenta", "pimentas", "molho", "molhos",
+}
+_ORIGEM_ANIMAL_WORDS: set[str] = {
+    "queijaria", "queijo", "queijos",
+    "laticinio", "laticinios", "lacteo", "lacteos",
+    "iogurte", "iogurtes",
+    "embutido", "embutidos", "defumado", "defumados",
+}
+_BEBIDAS_WORDS: set[str] = {
+    "cervejaria", "cerveja", "cervejas",
+    "vinicola", "vinho", "vinhos",
+    "cachaca", "cachacas",
+    "suco", "sucos",
+    "cafe", "cafes",
+}
+
+
+def _strip_accents(s: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", s) if not unicodedata.combining(c)
+    )
+
+
+def _name_words(name: str) -> set[str]:
+    """Extrai o conjunto de palavras lowercase/sem acento do nome do
+    fornecedor. Quebra CamelCase ("CajuMel" → "Caju Mel") e separa por
+    qualquer caractere não-alfanumérico.
+    """
+    no_accents = _strip_accents(name)
+    spaced = re.sub(r"([a-z])([A-Z])", r"\1 \2", no_accents)
+    return {w.lower() for w in re.findall(r"[A-Za-z]+", spaced)}
+
+
+def _detect_category(
+    site_type_label: str | None,
+    supplier_type: SupplierType,
+    supplier_name: str,
+) -> str | None:
+    """Mapeia label do site + nome do fornecedor para slug de
+    FEITO_POTIGUAR_CATEGORIES.
+
+    Ordem de prioridade:
+      1. Restaurantes/hotelaria — slug fixo pelo SupplierType.
+      2. Nome do fornecedor — pega keywords específicas (ex.: "Mel Boa Fé",
+         "Queijaria JC", "CajuMel", "Apíarios Flora") que diferenciam
+         categorias dentro do balaio "Agroindústria"/"Indústria".
+      3. Label do site — quando bate categoria do programa Feito Potiguar.
+      4. Fallback `alimentos-naturais` (categoria mais ampla).
+    """
+    if supplier_type == "restaurant":
+        return "bares-e-restaurantes"
+    if supplier_type == "hospitality":
+        return "hospedagem"
+
+    words = _name_words(supplier_name)
+    if words & _DOCES_TEMPEROS_WORDS:
+        return "doces-e-temperos"
+    if words & _ORIGEM_ANIMAL_WORDS:
+        return "origem-animal"
+    if words & _BEBIDAS_WORDS:
+        return "bebidas"
+
+    if site_type_label:
+        norm = _strip_accents(site_type_label).lower()
+        for key, slug in _CATEGORY_KEYWORDS:
+            if key in norm:
+                return slug
+    return "alimentos-naturais"
 
 
 @dataclass
@@ -126,12 +225,22 @@ def _extract_address(full_address: str) -> dict[str, str | None]:
             out["district"] = district
             full_address = before.strip(" ,-")
 
-    # Número: dígitos no final do que sobrou
+    # Número: dígitos no final, opcionalmente precedidos de "Nº" / "N°" / "n.".
+    # Os caracteres º (U+00BA) e ° (U+00B0) costumam aparecer indistintamente.
     if full_address:
-        num_match = re.search(r",?\s*(\d+[A-Za-z]?)\s*$", full_address)
+        num_match = re.search(
+            r",?\s*(?:n[º°ºo]\.?\s*)?(\d+[A-Za-z]?)\s*$",
+            full_address,
+            re.IGNORECASE,
+        )
         if num_match:
             out["number"] = num_match.group(1)
             full_address = full_address[: num_match.start()].rstrip(" ,-")
+        # Limpa "Nº" residual no fim caso só sobre o prefixo (ex.: rua sem número
+        # mas com "Nº" colado).
+        full_address = re.sub(
+            r"[,\s]*n[º°ºo]\.?\s*$", "", full_address, flags=re.IGNORECASE
+        ).rstrip(" ,-")
         out["street"] = full_address or None
 
     return out
@@ -195,11 +304,16 @@ def parse_empresa_page(client: BrowserActClient, url: str) -> EmpresaScrape | No
     if not city:
         city = extract_rn_city(own_md)
 
-    # Descrição: primeiro parágrafo significativo
+    # Descrição: primeiro parágrafo significativo (texto corrido, não item de
+    # menu/breadcrumb). Ignora linhas que são essencialmente um bullet ou um
+    # markdown link (ex.: "+ [Alimentos e Bebidas](...)").
     description: str | None = None
+    link_only_re = re.compile(r"^[\+\-\*\s>]*\[[^\]]+\]\([^)]+\)\s*$")
     for line in own_md.split("\n"):
         line = line.strip()
-        if not line or line.startswith(("#", "*", "[", "-", "|")):
+        if not line or line.startswith(("#", "*", "[", "-", "|", "+", ">")):
+            continue
+        if link_only_re.match(line):
             continue
         cleaned = clean_text(line)
         if cleaned and len(cleaned) > 60:
@@ -230,7 +344,7 @@ def parse_empresa_page(client: BrowserActClient, url: str) -> EmpresaScrape | No
         story=description,
         logo_url=None,
         cover_url=None,
-        primary_category=None,
+        primary_category=_detect_category(site_type_label, supplier_type, name),
         street=address_parts["street"],
         number=address_parts["number"],
         district=address_parts["district"],

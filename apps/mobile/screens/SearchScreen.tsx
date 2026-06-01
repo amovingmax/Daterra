@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
+import { FEITO_POTIGUAR_CATEGORIES, formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import {
   addRecentSearch,
@@ -21,9 +21,11 @@ import {
   getRecentSearches,
   removeRecentSearch,
 } from '../lib/recent-searches';
-import { searchSuppliers } from '../lib/queries';
+import { searchProducts, searchSuppliers, type SearchProductItem } from '../lib/queries';
 import type { DBSupplier } from '../lib/supabase';
 import type { MainTabParamList, SearchStackParamList } from '../navigation/types';
+
+type ResultMode = 'products' | 'suppliers';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'Search'>;
 
@@ -41,15 +43,35 @@ const FOOD_CATEGORIES = FEITO_POTIGUAR_CATEGORIES.filter(
   (c) => c.slug !== 'bares-e-restaurantes' && c.slug !== 'hospedagem',
 );
 
-export function SearchScreen(_: Props) {
+export function SearchScreen({ route }: Props) {
   const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
 
   const [query, setQuery] = useState('');
   const [selectedType, setSelectedType] = useState<DBSupplier['type'] | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    route.params?.category ?? null,
+  );
+
+  // Default ao filtrar por categoria: produtos. Toggle muda pra produtores.
+  // Selecionar pill de tipo (Produtores/Restaurantes/Hotelaria) força modo
+  // "suppliers" porque type é propriedade do fornecedor, não do produto.
+  const [resultMode, setResultMode] = useState<ResultMode>('products');
   const [recents, setRecents] = useState<string[]>([]);
-  const [results, setResults] = useState<DBSupplier[]>([]);
+  const [productResults, setProductResults] = useState<SearchProductItem[]>([]);
+  const [supplierResults, setSupplierResults] = useState<DBSupplier[]>([]);
   const [searching, setSearching] = useState(false);
+
+  // Quando o usuário toca numa categoria na Home (ou no modal), a tela de Busca
+  // recebe a categoria por params. Reseta filtros conflitantes (type, query)
+  // pra evitar AND empilhado de uma sessão anterior que zera resultados.
+  useEffect(() => {
+    if (route.params?.category) {
+      setSelectedCategory(route.params.category);
+      setSelectedType(null);
+      setQuery('');
+      setResultMode('products');
+    }
+  }, [route.params?.category]);
 
   const hasFilters = !!query.trim() || !!selectedType || !!selectedCategory;
 
@@ -63,22 +85,47 @@ export function SearchScreen(_: Props) {
   // Roda a busca com debounce sempre que filtros mudam
   useEffect(() => {
     if (!hasFilters) {
-      setResults([]);
+      setProductResults([]);
+      setSupplierResults([]);
       setSearching(false);
       return;
     }
     const handle = setTimeout(async () => {
       setSearching(true);
-      const list = await searchSuppliers({
-        query,
-        type: selectedType,
-        category: selectedCategory,
-      });
-      setResults(list);
+      if (resultMode === 'products') {
+        const list = await searchProducts({
+          query,
+          type: selectedType,
+          category: selectedCategory,
+        });
+        setProductResults(list);
+      } else {
+        const list = await searchSuppliers({
+          query,
+          type: selectedType,
+          category: selectedCategory,
+        });
+        setSupplierResults(list);
+      }
       setSearching(false);
     }, 300);
     return () => clearTimeout(handle);
-  }, [query, selectedType, selectedCategory, hasFilters]);
+  }, [query, selectedType, selectedCategory, resultMode, hasFilters]);
+
+  function handleSelectType(t: DBSupplier['type'] | null) {
+    // Tipo só faz sentido pra fornecedores; ao selecionar, automaticamente
+    // muda pra modo "suppliers".
+    setSelectedType(t);
+    if (t) setResultMode('suppliers');
+  }
+
+  function handleSelectCategory(slug: string | null) {
+    setSelectedCategory(slug);
+    // Limpa filtro de tipo: a maioria das categorias do programa só tem
+    // producers; manter um type='restaurant'/'hospitality' aqui zera o
+    // resultado por intersecção.
+    setSelectedType(null);
+  }
 
   async function handleSubmit() {
     if (query.trim().length >= 2) {
@@ -110,6 +157,7 @@ export function SearchScreen(_: Props) {
     setQuery('');
     setSelectedType(null);
     setSelectedCategory(null);
+    setResultMode('products');
   }
 
   const showInitialState = !hasFilters;
@@ -136,29 +184,31 @@ export function SearchScreen(_: Props) {
         )}
       </View>
 
-      {/* Pills de tipo */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tipo de negócio</Text>
-        <View style={styles.pillsRow}>
-          {TYPE_FILTERS.map((t) => {
-            const active = selectedType === t.value;
-            return (
-              <Pressable
-                key={t.value}
-                onPress={() => setSelectedType(active ? null : t.value)}
-                style={[styles.pill, active && styles.pillActive]}
-              >
-                <Text style={[styles.pillEmoji, active && styles.pillTextActive]}>
-                  {t.emoji}
-                </Text>
-                <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                  {t.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+      {/* Pills de tipo — só fazem sentido no modo "Produtores" */}
+      {resultMode === 'suppliers' && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tipo de negócio</Text>
+          <View style={styles.pillsRow}>
+            {TYPE_FILTERS.map((t) => {
+              const active = selectedType === t.value;
+              return (
+                <Pressable
+                  key={t.value}
+                  onPress={() => handleSelectType(active ? null : t.value)}
+                  style={[styles.pill, active && styles.pillActive]}
+                >
+                  <Text style={[styles.pillEmoji, active && styles.pillTextActive]}>
+                    {t.emoji}
+                  </Text>
+                  <Text style={[styles.pillText, active && styles.pillTextActive]}>
+                    {t.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Pills de categoria */}
       <View style={styles.section}>
@@ -169,7 +219,7 @@ export function SearchScreen(_: Props) {
             return (
               <Pressable
                 key={c.slug}
-                onPress={() => setSelectedCategory(active ? null : c.slug)}
+                onPress={() => handleSelectCategory(active ? null : c.slug)}
                 style={[styles.pill, active && styles.pillActive]}
               >
                 <Text style={[styles.pillEmoji, active && styles.pillTextActive]}>
@@ -183,6 +233,44 @@ export function SearchScreen(_: Props) {
           })}
         </View>
       </View>
+
+      {/* Toggle Produtos | Produtores — só no modo busca ativa */}
+      {!showInitialState && (
+        <View style={styles.toggleWrap}>
+          <Pressable
+            onPress={() => setResultMode('products')}
+            style={[
+              styles.toggleBtn,
+              resultMode === 'products' && styles.toggleBtnActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.toggleText,
+                resultMode === 'products' && styles.toggleTextActive,
+              ]}
+            >
+              Produtos
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setResultMode('suppliers')}
+            style={[
+              styles.toggleBtn,
+              resultMode === 'suppliers' && styles.toggleBtnActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.toggleText,
+                resultMode === 'suppliers' && styles.toggleTextActive,
+              ]}
+            >
+              Produtores
+            </Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* Conteúdo: estado inicial OU resultados */}
       {showInitialState ? (
@@ -199,10 +287,21 @@ export function SearchScreen(_: Props) {
             />
           }
         />
+      ) : resultMode === 'products' ? (
+        <ProductResultsList
+          loading={searching}
+          results={productResults}
+          onTapResult={(p) =>
+            tabNav.navigate('HomeTab', {
+              screen: 'ProductDetail',
+              params: { productId: p.id },
+            })
+          }
+        />
       ) : (
         <ResultsList
           loading={searching}
-          results={results}
+          results={supplierResults}
           onTapResult={(s) =>
             tabNav.navigate('HomeTab', {
               screen: 'Store',
@@ -212,6 +311,66 @@ export function SearchScreen(_: Props) {
         />
       )}
     </SafeAreaView>
+  );
+}
+
+function ProductResultsList({
+  loading,
+  results,
+  onTapResult,
+}: {
+  loading: boolean;
+  results: SearchProductItem[];
+  onTapResult: (p: SearchProductItem) => void;
+}) {
+  if (loading) {
+    return <ActivityIndicator color={colors.brand[500]} style={{ marginTop: 24 }} />;
+  }
+  if (results.length === 0) {
+    return (
+      <View style={styles.empty}>
+        <Text style={styles.emptyEmoji}>🥫</Text>
+        <Text style={styles.emptyTitle}>Nenhum produto encontrado</Text>
+        <Text style={styles.emptyText}>
+          Tente outra categoria ou termo. Você também pode ver os produtores na aba acima.
+        </Text>
+      </View>
+    );
+  }
+  return (
+    <FlatList
+      data={results}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => {
+        const photo = item.photos?.[0];
+        const priceCents = item.promo_price_cents ?? item.price_cents;
+        return (
+          <Pressable style={styles.resultRow} onPress={() => onTapResult(item)}>
+            <View style={styles.resultImage}>
+              {photo ? (
+                <Image source={{ uri: photo }} style={styles.resultImageInner} />
+              ) : (
+                <Text style={styles.resultImagePlaceholder}>🥫</Text>
+              )}
+            </View>
+            <View style={styles.resultBody}>
+              <Text style={styles.resultName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <Text style={styles.resultMeta} numberOfLines={1}>
+                🏪 {item.supplier_name}
+                {item.supplier_city ? ` · ${item.supplier_city}` : ''}
+              </Text>
+              <Text style={styles.resultPrice}>
+                {priceCents !== null ? formatBRL(priceCents) : '—'}
+              </Text>
+            </View>
+            <Text style={styles.resultChevron}>›</Text>
+          </Pressable>
+        );
+      }}
+      contentContainerStyle={styles.resultsList}
+    />
   );
 }
 
@@ -444,7 +603,45 @@ const styles = StyleSheet.create({
     color: colors.ink.primary,
   },
   resultMeta: { fontSize: 12, color: colors.ink.secondary, marginTop: 2 },
+  resultPrice: {
+    fontSize: 14,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.brand[700],
+    marginTop: 4,
+  },
   resultChevron: { fontSize: 22, color: colors.ink.tertiary },
+  toggleWrap: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 12,
+    backgroundColor: colors.sand[100],
+    borderRadius: 999,
+    padding: 4,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 999,
+  },
+  toggleBtnActive: {
+    backgroundColor: colors.surface.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.ink.secondary,
+  },
+  toggleTextActive: {
+    color: colors.brand[700],
+    fontWeight: typography.fontWeight.semibold,
+  },
   empty: { paddingVertical: 60, paddingHorizontal: 40, alignItems: 'center' },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyTitle: {

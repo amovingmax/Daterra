@@ -1,13 +1,25 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
-import type { HomeStackParamList } from '../navigation/types';
+import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'CategoriesModal'>;
 
 export function CategoriesModalScreen({ navigation }: Props) {
+  const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+
+  function openCategory(slug: string) {
+    navigation.goBack();
+    tabNav.navigate('SearchTab', {
+      screen: 'Search',
+      params: { category: slug },
+    });
+  }
+
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
@@ -27,7 +39,7 @@ export function CategoriesModalScreen({ navigation }: Props) {
             <Pressable
               key={cat.slug}
               style={styles.gridItem}
-              onPress={() => navigation.goBack()}
+              onPress={() => openCategory(cat.slug)}
             >
               <View style={styles.iconBox}>
                 <Text style={styles.icon}>{cat.icon}</Text>

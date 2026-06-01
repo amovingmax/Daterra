@@ -16,7 +16,7 @@ export type HomeStackParamList = {
 };
 
 export type SearchStackParamList = {
-  Search: undefined;
+  Search: { category?: string } | undefined;
 };
 
 export type OrdersStackParamList = {

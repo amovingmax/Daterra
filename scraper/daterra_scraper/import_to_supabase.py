@@ -130,6 +130,34 @@ def main(
     count = _upsert_chunked(supabase, "suppliers", suppliers, on_conflict="slug")
     console.print(f"[bold green]✓[/] {count} suppliers gravados (campos admin preservados)")
 
+    # primary_category: backfill apenas para slugs cujo valor no banco é NULL
+    # (preserva categorias já editadas pelo admin). Agrupa por categoria pra
+    # rodar 1 UPDATE por categoria em vez de 1 por fornecedor.
+    by_category: dict[str, list[str]] = {}
+    for s in suppliers_raw:
+        cat = s.get("primary_category")
+        if not cat:
+            continue
+        by_category.setdefault(cat, []).append(s["slug"])
+
+    if by_category:
+        backfilled = 0
+        for cat, slugs in by_category.items():
+            for chunk in [slugs[i : i + 100] for i in range(0, len(slugs), 100)]:
+                resp = (
+                    supabase.table("suppliers")
+                    .update({"primary_category": cat})
+                    .in_("slug", chunk)
+                    .is_("primary_category", "null")
+                    .execute()
+                )
+                if resp.data:
+                    backfilled += len(resp.data)
+        console.print(
+            f"[bold green]✓[/] {backfilled} primary_category preenchidos "
+            f"(campos já editados pelo admin preservados)"
+        )
+
     products_raw = _load_json("products.json")
     if not products_raw:
         console.print("[yellow]products.json vazio — pulando[/]")
