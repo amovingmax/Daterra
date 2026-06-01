@@ -12,6 +12,8 @@ import { AuthProvider, useAuth } from './lib/auth-context';
 import { CartProvider } from './lib/cart-context';
 import { AuthHubScreen } from './screens/auth/AuthHubScreen';
 import { LoginScreen } from './screens/auth/LoginScreen';
+import { ForgotPasswordScreen } from './screens/auth/ForgotPasswordScreen';
+import { ResetPasswordScreen } from './screens/auth/ResetPasswordScreen';
 import { SignupStep1Screen } from './screens/auth/SignupStep1Screen';
 import { SignupStep2Screen } from './screens/auth/SignupStep2Screen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -183,6 +185,11 @@ function AuthNavigator() {
         options={{ headerShown: true, title: '', headerBackTitle: 'Voltar' }}
       />
       <AuthStack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+        options={{ headerShown: true, title: '', headerBackTitle: 'Voltar' }}
+      />
+      <AuthStack.Screen
         name="SignupStep1"
         component={SignupStep1Screen}
         options={{ headerShown: true, title: '', headerBackTitle: 'Voltar' }}
@@ -197,7 +204,7 @@ function AuthNavigator() {
 }
 
 function RootNavigator() {
-  const { session, loading } = useAuth();
+  const { session, loading, recovery } = useAuth();
 
   if (loading) {
     return (
@@ -206,6 +213,10 @@ function RootNavigator() {
       </View>
     );
   }
+
+  // Veio do link de recuperação de senha: força a tela de nova senha,
+  // independente de já haver sessão ativa.
+  if (recovery) return <ResetPasswordScreen />;
 
   return session ? <MainTabs /> : <AuthNavigator />;
 }

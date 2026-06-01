@@ -1,12 +1,28 @@
-import { Image, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Button } from '../../components/Button';
+import { signInWithProvider, type OAuthProvider } from '../../lib/oauth';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AuthHub'>;
 
 export function AuthHubScreen({ navigation }: Props) {
+  const [pending, setPending] = useState<OAuthProvider | null>(null);
+
+  async function handleSocial(provider: OAuthProvider) {
+    setPending(provider);
+    const { error, cancelled } = await signInWithProvider(provider);
+    setPending(null);
+    if (cancelled) return;
+    if (error) {
+      Alert.alert('Não foi possível entrar', error);
+      return;
+    }
+    // Sucesso: o AuthProvider escuta a sessão e redireciona pra Home automaticamente.
+  }
+
   return (
     <View style={styles.root}>
       <ImageBackground
@@ -39,20 +55,21 @@ export function AuthHubScreen({ navigation }: Props) {
         <View style={styles.socialRow}>
           <Button
             label="Google"
-            variant="ghost"
-            disabled
-            onPress={() => {}}
+            variant="secondary"
+            loading={pending === 'google'}
+            disabled={pending !== null}
+            onPress={() => handleSocial('google')}
             fullWidth={false}
           />
           <Button
             label="Apple"
-            variant="ghost"
-            disabled
-            onPress={() => {}}
+            variant="secondary"
+            loading={pending === 'apple'}
+            disabled={pending !== null}
+            onPress={() => handleSocial('apple')}
             fullWidth={false}
           />
         </View>
-        <Text style={styles.socialNote}>(login social na Fase 2)</Text>
       </View>
     </View>
   );
@@ -124,11 +141,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 12,
-  },
-  socialNote: {
-    textAlign: 'center',
-    color: colors.ink.tertiary,
-    fontSize: 12,
-    marginTop: 6,
   },
 });

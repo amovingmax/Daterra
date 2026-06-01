@@ -43,6 +43,7 @@ export type MainTabParamList = {
 export type AuthStackParamList = {
   AuthHub: undefined;
   Login: undefined;
+  ForgotPassword: undefined;
   SignupStep1: undefined;
   SignupStep2: { step1: Pick<Signup, 'full_name' | 'email' | 'phone' | 'password'> };
 };

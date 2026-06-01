@@ -11,7 +11,7 @@ import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
-export function LoginScreen(_: Props) {
+export function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -77,7 +77,11 @@ export function LoginScreen(_: Props) {
         <View style={styles.spacer} />
         <Button label="Entrar" loading={loading} onPress={handleSubmit} />
 
-        <Pressable style={styles.forgot} hitSlop={8}>
+        <Pressable
+          style={styles.forgot}
+          hitSlop={8}
+          onPress={() => navigation.navigate('ForgotPassword')}
+        >
           <Text style={styles.forgotText}>Esqueci minha senha</Text>
         </Pressable>
       </View>

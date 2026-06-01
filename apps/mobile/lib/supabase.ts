@@ -18,6 +18,9 @@ export const supabase = createClient<Database>(supabaseUrl ?? '', supabaseAnonKe
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // PKCE é o fluxo recomendado p/ mobile — o code verifier fica no AsyncStorage
+    // e é trocado por sessão via exchangeCodeForSession (login social + reset de senha).
+    flowType: 'pkce',
   },
 });
 
