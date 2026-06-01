@@ -108,17 +108,6 @@ export function ProfileScreen({ navigation }: Props) {
         },
         supportSection,
         {
-          title: 'Privacidade',
-          items: [
-            {
-              icon: '🗑️',
-              label: 'Excluir minha conta',
-              onPress: () => navigation.navigate('DeleteAccount'),
-              danger: true,
-            },
-          ],
-        },
-        {
           items: [{ icon: '🚪', label: 'Sair', onPress: confirmSignOut, danger: true }],
         },
       ];

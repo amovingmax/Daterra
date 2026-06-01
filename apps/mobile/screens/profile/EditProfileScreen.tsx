@@ -96,6 +96,15 @@ export function EditProfileScreen({ navigation }: Props) {
           onPress={handleSubmit}
           loading={submitting}
         />
+
+        {/* Opção discreta — não incentivamos a exclusão da conta. */}
+        <Pressable
+          onPress={() => navigation.navigate('DeleteAccount')}
+          hitSlop={8}
+          style={styles.deleteLink}
+        >
+          <Text style={styles.deleteLinkText}>Excluir minha conta</Text>
+        </Pressable>
       </View>
     </ScreenContainer>
   );
@@ -111,4 +120,10 @@ const styles = StyleSheet.create({
   },
   form: { marginTop: 4 },
   spacer: { height: 12 },
+  deleteLink: { alignSelf: 'center', marginTop: 28, padding: 8 },
+  deleteLinkText: {
+    color: colors.ink.tertiary,
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
 });

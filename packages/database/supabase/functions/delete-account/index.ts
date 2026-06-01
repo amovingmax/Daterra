@@ -12,8 +12,8 @@
 //      notifications, expo_push_tokens, addresses.
 //   2. Anonimiza os pedidos (remove o snapshot de endereço) mantendo os valores.
 //   3. Anonimiza o profile (nome/email/telefone/cpf).
-//   4. Desativa o login: embaralha o e-mail do auth, limpa metadados e bane o
-//      usuário (não pode mais entrar).
+//   4. Embaralha o e-mail do auth e limpa metadados — o login pelo e-mail
+//      original deixa de existir (não usamos ban).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.46.1';
 import { corsHeaders, json } from '../_shared/cors.ts';
@@ -81,13 +81,13 @@ Deno.serve(async (req) => {
       .eq('id', uid);
     if (profErr) throw new Error(`profiles: ${profErr.message}`);
 
-    // 4) Desativa o login e remove PII do auth (e-mail/metadados); bane o acesso
+    // 4) Embaralha o e-mail do auth e limpa metadados (remove PII de login).
+    // Sem ban: o e-mail original some, então não há como reentrar com ele.
     const { error: authErr } = await admin.auth.admin.updateUserById(uid, {
       email: anonEmail,
       email_confirm: true,
       user_metadata: {},
       app_metadata: {},
-      ban_duration: '876000h', // ~100 anos
     });
     if (authErr) throw new Error(`auth: ${authErr.message}`);
 
