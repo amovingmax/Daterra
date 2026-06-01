@@ -1,15 +1,19 @@
 // delete-account
 // ---------------
 // Exclusão de conta a pedido do titular — direito de eliminação previsto na
-// LGPD (Lei nº 13.709/2018, art. 18, VI). Chamada pelo app com o JWT do próprio
-// usuário; remove definitivamente os dados pessoais e o login.
+// LGPD (Lei nº 13.709/2018, art. 18, VI). A LGPD ressalva, porém, a guarda de
+// dados para cumprimento de obrigação legal/fiscal (art. 16, I). Por isso aqui
+// fazemos ANONIMIZAÇÃO: removemos os dados pessoais e desativamos o login, mas
+// preservamos o registro financeiro dos pedidos (sem PII) pelo período de
+// retenção legal.
 //
-// Ordem de remoção (com service_role, ignorando RLS):
-//   1. reviews do usuário          (FK p/ profiles sem cascade)
-//   2. orders do usuário           (FK p/ profiles sem cascade; cascateia itens,
-//                                    histórico, avaliações de pedido, payout_orders)
-//   3. auth.users                  (cascateia profiles → addresses, favorites,
-//                                    payment_cards, notifications, expo_push_tokens)
+// O que acontece (com service_role, ignorando RLS):
+//   1. Apaga dados pessoais periféricos: reviews, favorites, payment_cards,
+//      notifications, expo_push_tokens, addresses.
+//   2. Anonimiza os pedidos (remove o snapshot de endereço) mantendo os valores.
+//   3. Anonimiza o profile (nome/email/telefone/cpf).
+//   4. Desativa o login: embaralha o e-mail do auth, limpa metadados e bane o
+//      usuário (não pode mais entrar).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.46.1';
 import { corsHeaders, json } from '../_shared/cors.ts';
@@ -23,7 +27,7 @@ Deno.serve(async (req) => {
   const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
   try {
-    // 1) Identifica o titular pelo JWT (só ele mesmo pode excluir a própria conta)
+    // Identifica o titular pelo JWT (só ele mesmo pode excluir a própria conta)
     const authHeader = req.headers.get('Authorization') ?? '';
     const userClient = createClient(SUPABASE_URL, ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
@@ -35,18 +39,57 @@ Deno.serve(async (req) => {
     if (userErr || !user) return json({ error: 'Não autenticado' }, 401);
 
     const uid = user.id;
+    const anonEmail = `deleted+${uid}@anonimizado.daterra.app`;
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // 2) Remove o que referencia profiles sem cascade
-    const { error: revErr } = await admin.from('reviews').delete().eq('user_id', uid);
-    if (revErr) throw new Error(`reviews: ${revErr.message}`);
+    // 1) Apaga dados pessoais periféricos (não exigidos por retenção fiscal)
+    for (const table of [
+      'reviews',
+      'favorites',
+      'payment_cards',
+      'notifications',
+      'expo_push_tokens',
+      'addresses',
+    ]) {
+      const { error } = await admin.from(table).delete().eq('user_id', uid);
+      if (error) throw new Error(`${table}: ${error.message}`);
+    }
 
-    const { error: ordErr } = await admin.from('orders').delete().eq('user_id', uid);
+    // 2) Anonimiza os pedidos: mantém o registro financeiro, remove o endereço
+    const { error: ordErr } = await admin
+      .from('orders')
+      .update({ delivery_address: null })
+      .eq('user_id', uid);
     if (ordErr) throw new Error(`orders: ${ordErr.message}`);
 
-    // 3) Remove o login — cascateia profiles e todo o resto dos dados pessoais
-    const { error: delErr } = await admin.auth.admin.deleteUser(uid);
-    if (delErr) throw new Error(`auth: ${delErr.message}`);
+    // 3) Anonimiza o profile (mantém a linha para os pedidos seguirem válidos)
+    const { error: profErr } = await admin
+      .from('profiles')
+      .update({
+        full_name: 'Usuário removido',
+        email: anonEmail,
+        phone: '',
+        cpf: null,
+        avatar_url: null,
+        notification_prefs: {
+          order_updates: false,
+          promotions: false,
+          favorites_news: false,
+          newsletter: false,
+        },
+      })
+      .eq('id', uid);
+    if (profErr) throw new Error(`profiles: ${profErr.message}`);
+
+    // 4) Desativa o login e remove PII do auth (e-mail/metadados); bane o acesso
+    const { error: authErr } = await admin.auth.admin.updateUserById(uid, {
+      email: anonEmail,
+      email_confirm: true,
+      user_metadata: {},
+      app_metadata: {},
+      ban_duration: '876000h', // ~100 anos
+    });
+    if (authErr) throw new Error(`auth: ${authErr.message}`);
 
     return json({ deleted: true });
   } catch (e) {

@@ -12,7 +12,6 @@ type Props = NativeStackScreenProps<ProfileStackParamList, 'DeleteAccount'>;
 const REMOVED = [
   'Seus dados pessoais (nome, e-mail, telefone, CPF)',
   'Endereços salvos',
-  'Histórico de pedidos',
   'Favoritos e notificações',
   'Seu acesso (login) ao Da Terra',
 ];
@@ -24,7 +23,7 @@ export function DeleteAccountScreen({ navigation }: Props) {
   function confirm() {
     Alert.alert(
       'Excluir conta definitivamente?',
-      'Esta ação é permanente e não pode ser desfeita. Todos os seus dados serão apagados.',
+      'Esta ação é permanente. Seus dados pessoais serão removidos e você perderá o acesso. O histórico de pedidos é mantido anonimizado por obrigação legal.',
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Excluir', style: 'destructive', onPress: runDelete },
@@ -74,9 +73,17 @@ export function DeleteAccountScreen({ navigation }: Props) {
           ))}
         </View>
 
+        <View style={styles.retentionBox}>
+          <Text style={styles.retentionText}>
+            📑 O <Text style={styles.bold}>histórico de pedidos</Text> é mantido de forma{' '}
+            <Text style={styles.bold}>anonimizada</Text> (sem seus dados pessoais) para cumprir
+            obrigações legais e fiscais de guarda, conforme permite a própria LGPD (art. 16, I).
+          </Text>
+        </View>
+
         <Text style={styles.warning}>
-          ⚠️ Esta ação é <Text style={styles.bold}>permanente</Text> e não pode ser desfeita. Pedidos
-          em andamento podem ser cancelados.
+          ⚠️ Esta ação é <Text style={styles.bold}>permanente</Text> e não pode ser desfeita. Você
+          perde o acesso à conta e aos pedidos.
         </Text>
 
         <Pressable style={styles.agreeRow} onPress={() => setAgree((v) => !v)} hitSlop={6}>
@@ -122,6 +129,13 @@ const styles = StyleSheet.create({
   },
   lgpdText: { fontSize: 14, color: colors.ink.secondary, lineHeight: 21 },
   bold: { fontWeight: typography.fontWeight.semibold, color: colors.ink.primary },
+  retentionBox: {
+    backgroundColor: colors.sand[100],
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+  },
+  retentionText: { fontSize: 13, color: colors.ink.secondary, lineHeight: 20 },
   list: { marginBottom: 16, gap: 8 },
   listRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
   listBullet: { color: colors.ink.tertiary, fontSize: 15 },
