@@ -9,13 +9,18 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { formatBRL, type OrderStatus } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Button } from '../components/Button';
 import { useAuth } from '../lib/auth-context';
 import { listMyOrders } from '../lib/queries';
 import type { DBOrder } from '../lib/supabase';
-import type { OrdersStackParamList } from '../navigation/types';
+import type { OrdersStackParamList, RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<OrdersStackParamList, 'OrdersList'>;
 
@@ -42,13 +47,17 @@ const STATUS_COLOR: Record<OrderStatus, string> = {
 };
 
 export function OrdersListScreen({ navigation }: Props) {
+  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useAuth();
   const [orders, setOrders] = useState<DBOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   async function load() {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const list = await listMyOrders(user.id);
     setOrders(list);
     setLoading(false);
@@ -59,6 +68,30 @@ export function OrdersListScreen({ navigation }: Props) {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  // Visitante: pedidos exigem conta.
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Seus pedidos</Text>
+        </View>
+        <View style={styles.empty}>
+          <Text style={styles.emptyEmoji}>📦</Text>
+          <Text style={styles.emptyTitle}>Entre para ver seus pedidos</Text>
+          <Text style={styles.emptySubtitle}>
+            Faça login ou crie uma conta para acompanhar seus pedidos e entregas.
+          </Text>
+          <View style={styles.guestBtn}>
+            <Button
+              label="Entrar ou criar conta"
+              onPress={() => rootNav.navigate('Auth', { screen: 'AuthHub' })}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
@@ -169,4 +202,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
+  guestBtn: { marginTop: 20, alignSelf: 'stretch', paddingHorizontal: 20 },
 });

@@ -1,7 +1,8 @@
 import 'react-native-gesture-handler';
+import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -34,12 +35,14 @@ import { EditProfileScreen } from './screens/profile/EditProfileScreen';
 import { AddressesListScreen } from './screens/profile/AddressesListScreen';
 import { AddressFormScreen } from './screens/profile/AddressFormScreen';
 import { AboutScreen } from './screens/profile/AboutScreen';
+import { DeleteAccountScreen } from './screens/profile/DeleteAccountScreen';
 import type {
   AuthStackParamList,
   HomeStackParamList,
   MainTabParamList,
   OrdersStackParamList,
   ProfileStackParamList,
+  RootStackParamList,
   SearchStackParamList,
 } from './navigation/types';
 
@@ -96,6 +99,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen name="Addresses" component={AddressesListScreen} />
       <ProfileStack.Screen name="AddressForm" component={AddressFormScreen} />
       <ProfileStack.Screen name="About" component={AboutScreen} />
+      <ProfileStack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
     </ProfileStack.Navigator>
   );
 }
@@ -203,8 +207,21 @@ function AuthNavigator() {
   );
 }
 
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+
+// Conteúdo do modal de autenticação: reaproveita o AuthNavigator e se fecha
+// sozinho assim que o usuário loga (a sessão passa a existir).
+function AuthModal() {
+  const { session } = useAuth();
+  const navigation = useNavigation();
+  useEffect(() => {
+    if (session) navigation.goBack();
+  }, [session, navigation]);
+  return <AuthNavigator />;
+}
+
 function RootNavigator() {
-  const { session, loading, recovery } = useAuth();
+  const { loading, recovery } = useAuth();
 
   if (loading) {
     return (
@@ -218,7 +235,18 @@ function RootNavigator() {
   // independente de já haver sessão ativa.
   if (recovery) return <ResetPasswordScreen />;
 
-  return session ? <MainTabs /> : <AuthNavigator />;
+  // A Home (MainTabs) é a tela inicial mesmo SEM login (modo visitante).
+  // O fluxo de login/cadastro vive num modal acessível de dentro do app.
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      <RootStack.Screen name="Main" component={MainTabs} />
+      <RootStack.Screen
+        name="Auth"
+        component={AuthModal}
+        options={{ presentation: 'modal' }}
+      />
+    </RootStack.Navigator>
+  );
 }
 
 export default function App() {

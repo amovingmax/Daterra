@@ -15,7 +15,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { useAuth } from '../lib/auth-context';
@@ -26,7 +29,11 @@ import {
 } from '../lib/queries';
 import { CartBar } from '../components/CartBar';
 import type { DBSupplier } from '../lib/supabase';
-import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
+import type {
+  HomeStackParamList,
+  MainTabParamList,
+  RootStackParamList,
+} from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 
@@ -96,8 +103,9 @@ const SECTIONS: Section[] = [
 
 export function HomeScreen({ navigation }: Props) {
   const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useAuth();
-  const greetingName = user?.user_metadata?.full_name?.split(' ')[0] ?? 'visitante';
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0];
 
   function openCategory(slug: string) {
     tabNav.navigate('SearchTab', {
@@ -187,24 +195,44 @@ export function HomeScreen({ navigation }: Props) {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <Text style={styles.brand}>🌱 Da Terra</Text>
-            <Pressable
-              onPress={() => navigation.navigate('Notifications')}
-              style={styles.bellBtn}
-              hitSlop={6}
-              accessibilityLabel="Notificações"
-            >
-              <Text style={styles.bellIcon}>🔔</Text>
-              {unreadCount > 0 && (
-                <View style={styles.bellBadge}>
-                  <Text style={styles.bellBadgeText}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Text>
-                </View>
-              )}
-            </Pressable>
+            {user ? (
+              <Pressable
+                onPress={() => navigation.navigate('Notifications')}
+                style={styles.bellBtn}
+                hitSlop={6}
+                accessibilityLabel="Notificações"
+              >
+                <Text style={styles.bellIcon}>🔔</Text>
+                {unreadCount > 0 && (
+                  <View style={styles.bellBadge}>
+                    <Text style={styles.bellBadgeText}>
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => rootNav.navigate('Auth', { screen: 'AuthHub' })}
+                style={styles.loginBtn}
+                hitSlop={6}
+              >
+                <Text style={styles.loginBtnText}>Entrar</Text>
+              </Pressable>
+            )}
           </View>
-          <Text style={styles.greeting}>Olá, {greetingName}</Text>
-          <Text style={styles.address}>📍 Rio Grande do Norte</Text>
+          <Text style={styles.greeting}>
+            {firstName ? `Olá, ${firstName}` : 'Bem-vindo ao Da Terra 👋'}
+          </Text>
+          {user ? (
+            <Text style={styles.address}>📍 Rio Grande do Norte</Text>
+          ) : (
+            <Pressable onPress={() => rootNav.navigate('Auth', { screen: 'AuthHub' })} hitSlop={4}>
+              <Text style={styles.loginHint}>
+                Entre ou crie sua conta para pedir →
+              </Text>
+            </Pressable>
+          )}
         </View>
 
         <Text style={styles.sectionTitle}>Categorias</Text>
@@ -455,6 +483,25 @@ const styles = StyleSheet.create({
   },
   greeting: { fontSize: 16, color: colors.ink.primary },
   address: { marginTop: 4, fontSize: 14, color: colors.ink.secondary },
+  loginBtn: {
+    paddingHorizontal: 18,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.brand[500],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginBtnText: {
+    color: colors.ink.inverse,
+    fontSize: 14,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  loginHint: {
+    marginTop: 4,
+    fontSize: 14,
+    color: colors.brand[600],
+    fontWeight: typography.fontWeight.medium,
+  },
 
   sectionTitle: {
     paddingHorizontal: 20,

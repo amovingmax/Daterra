@@ -30,6 +30,7 @@ export type ProfileStackParamList = {
   Addresses: undefined;
   AddressForm: { address?: DBAddress };
   About: undefined;
+  DeleteAccount: undefined;
 };
 
 export type MainTabParamList = {
@@ -50,6 +51,9 @@ export type AuthStackParamList = {
 
 export type RootStackParamList = AuthStackParamList & MainTabParamList & {
   Home: undefined;
+  // Root stack: MainTabs sempre visível (modo visitante) + Auth como modal.
+  Main: NavigatorScreenParams<MainTabParamList>;
+  Auth: NavigatorScreenParams<AuthStackParamList>;
 };
 
 declare global {

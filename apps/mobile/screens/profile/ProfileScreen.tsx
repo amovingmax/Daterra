@@ -1,9 +1,14 @@
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Button } from '../../components/Button';
 import { useAuth } from '../../lib/auth-context';
-import type { ProfileStackParamList } from '../../navigation/types';
+import type { ProfileStackParamList, RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'Profile'>;
 
@@ -16,7 +21,9 @@ interface MenuItem {
 }
 
 export function ProfileScreen({ navigation }: Props) {
+  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, signOut } = useAuth();
+  const isGuest = !user;
   const fullName = user?.user_metadata?.full_name ?? 'Cliente';
   const email = user?.email ?? '';
   const initials = fullName
@@ -33,82 +40,117 @@ export function ProfileScreen({ navigation }: Props) {
     ]);
   }
 
-  const sections: { title?: string; items: MenuItem[] }[] = [
-    {
-      items: [
+  const supportSection: { title?: string; items: MenuItem[] } = {
+    title: 'Suporte',
+    items: [
+      {
+        icon: '🆘',
+        label: 'Falar com a Da Terra',
+        onPress: () => {
+          const phone = '5584999999999'; // placeholder, troca pelo real
+          Linking.openURL(
+            `https://wa.me/${phone}?text=${encodeURIComponent('Olá, preciso de ajuda no Da Terra')}`,
+          );
+        },
+      },
+      { icon: 'ℹ️', label: 'Sobre o Da Terra', onPress: () => navigation.navigate('About') },
+    ],
+  };
+
+  // Visitante: só Suporte/Sobre. Logado: conta completa.
+  const sections: { title?: string; items: MenuItem[] }[] = isGuest
+    ? [supportSection]
+    : [
         {
-          icon: '👤',
-          label: 'Dados pessoais',
-          onPress: () => navigation.navigate('EditProfile'),
+          items: [
+            {
+              icon: '👤',
+              label: 'Dados pessoais',
+              onPress: () => navigation.navigate('EditProfile'),
+            },
+            {
+              icon: '📍',
+              label: 'Endereços',
+              onPress: () => navigation.navigate('Addresses'),
+            },
+            {
+              icon: '💳',
+              label: 'Métodos de pagamento',
+              onPress: () =>
+                Alert.alert(
+                  'Em breve',
+                  'Vamos liberar cartão na próxima fase. Por enquanto, só Pix.',
+                ),
+              badge: 'Em breve',
+            },
+          ],
         },
         {
-          icon: '📍',
-          label: 'Endereços',
-          onPress: () => navigation.navigate('Addresses'),
+          title: 'Atividade',
+          items: [
+            {
+              icon: '🎟️',
+              label: 'Cupons',
+              onPress: () => Alert.alert('Em breve', 'Programa de cupons na Fase 2.'),
+              badge: 'Em breve',
+            },
+            {
+              icon: '🔔',
+              label: 'Notificações',
+              onPress: () =>
+                Alert.alert(
+                  'Em breve',
+                  'Preferências de notificação detalhadas chegam na próxima rodada.',
+                ),
+              badge: 'Em breve',
+            },
+          ],
+        },
+        supportSection,
+        {
+          title: 'Privacidade',
+          items: [
+            {
+              icon: '🗑️',
+              label: 'Excluir minha conta',
+              onPress: () => navigation.navigate('DeleteAccount'),
+              danger: true,
+            },
+          ],
         },
         {
-          icon: '💳',
-          label: 'Métodos de pagamento',
-          onPress: () =>
-            Alert.alert('Em breve', 'Vamos liberar cartão na próxima fase. Por enquanto, só Pix.'),
-          badge: 'Em breve',
+          items: [{ icon: '🚪', label: 'Sair', onPress: confirmSignOut, danger: true }],
         },
-      ],
-    },
-    {
-      title: 'Atividade',
-      items: [
-        {
-          icon: '🎟️',
-          label: 'Cupons',
-          onPress: () => Alert.alert('Em breve', 'Programa de cupons na Fase 2.'),
-          badge: 'Em breve',
-        },
-        {
-          icon: '🔔',
-          label: 'Notificações',
-          onPress: () =>
-            Alert.alert(
-              'Em breve',
-              'Preferências de notificação detalhadas chegam na próxima rodada.',
-            ),
-          badge: 'Em breve',
-        },
-      ],
-    },
-    {
-      title: 'Suporte',
-      items: [
-        {
-          icon: '🆘',
-          label: 'Falar com a Da Terra',
-          onPress: () => {
-            const phone = '5584999999999'; // placeholder, troca pelo real
-            Linking.openURL(
-              `https://wa.me/${phone}?text=${encodeURIComponent('Olá, preciso de ajuda no Da Terra')}`,
-            );
-          },
-        },
-        { icon: 'ℹ️', label: 'Sobre o Da Terra', onPress: () => navigation.navigate('About') },
-      ],
-    },
-    {
-      items: [{ icon: '🚪', label: 'Sair', onPress: confirmSignOut, danger: true }],
-    },
-  ];
+      ];
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials || '🌱'}</Text>
+            <Text style={styles.avatarText}>{isGuest ? '🌱' : initials || '🌱'}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{fullName}</Text>
-            <Text style={styles.email}>{email}</Text>
+            <Text style={styles.name}>{isGuest ? 'Visitante' : fullName}</Text>
+            <Text style={styles.email}>
+              {isGuest ? 'Você está navegando sem conta' : email}
+            </Text>
           </View>
         </View>
+
+        {isGuest && (
+          <View style={styles.guestCard}>
+            <Text style={styles.guestTitle}>Entre na sua conta</Text>
+            <Text style={styles.guestText}>
+              Faça login ou crie uma conta para pedir, acompanhar entregas, salvar endereços e
+              favoritos.
+            </Text>
+            <Button
+              label="Entrar ou criar conta"
+              onPress={() => rootNav.navigate('Auth', { screen: 'AuthHub' })}
+            />
+          </View>
+        )}
 
         {sections.map((section, idx) => (
           <View key={idx} style={styles.section}>
@@ -176,6 +218,27 @@ const styles = StyleSheet.create({
     color: colors.brand[700],
   },
   email: { fontSize: 14, color: colors.ink.secondary, marginTop: 2 },
+  guestCard: {
+    marginHorizontal: 16,
+    marginBottom: 20,
+    padding: 18,
+    backgroundColor: colors.surface.primary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.brand[100],
+    gap: 10,
+  },
+  guestTitle: {
+    fontSize: 17,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.brand[700],
+  },
+  guestText: {
+    fontSize: 14,
+    color: colors.ink.secondary,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
   section: { marginBottom: 16 },
   sectionTitle: {
     fontSize: 12,

@@ -9,7 +9,7 @@ import { colors, typography } from '@daterra/ui/tokens';
 
 interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   label: string;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   loading?: boolean;
   fullWidth?: boolean;
 }
@@ -32,13 +32,16 @@ export function Button({
         variant === 'primary' && styles.primary,
         variant === 'secondary' && styles.secondary,
         variant === 'ghost' && styles.ghost,
+        variant === 'danger' && styles.danger,
         pressed && styles.pressed,
         isDisabled && styles.disabled,
       ]}
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? colors.ink.inverse : colors.brand[500]} />
+        <ActivityIndicator
+          color={variant === 'primary' || variant === 'danger' ? colors.ink.inverse : colors.brand[500]}
+        />
       ) : (
         <Text
           style={[
@@ -46,6 +49,7 @@ export function Button({
             variant === 'primary' && styles.labelPrimary,
             variant === 'secondary' && styles.labelSecondary,
             variant === 'ghost' && styles.labelGhost,
+            variant === 'danger' && styles.labelPrimary,
           ]}
         >
           {label}
@@ -77,6 +81,9 @@ const styles = StyleSheet.create({
   },
   ghost: {
     backgroundColor: 'transparent',
+  },
+  danger: {
+    backgroundColor: colors.status.danger,
   },
   pressed: {
     opacity: 0.85,

@@ -10,18 +10,37 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Button } from '../components/Button';
+import { useAuth } from '../lib/auth-context';
 import { useCart } from '../lib/cart-context';
-import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
+import type {
+  HomeStackParamList,
+  MainTabParamList,
+  RootStackParamList,
+} from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Cart'>;
 
 export function CartScreen({ navigation }: Props) {
   const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { user } = useAuth();
   const { cart, itemCount, subtotalCents, setQuantity, removeItem, clearCart } = useCart();
+
+  function goToPayment() {
+    // Pagamento exige conta — visitante é encaminhado ao login antes do checkout.
+    if (!user) {
+      rootNav.navigate('Auth', { screen: 'AuthHub' });
+      return;
+    }
+    navigation.navigate('Checkout');
+  }
 
   function handleClear() {
     Alert.alert('Esvaziar sacola?', 'Tem certeza que quer remover todos os itens?', [
@@ -137,10 +156,7 @@ export function CartScreen({ navigation }: Props) {
               }}
             />
             <View style={{ height: 10 }} />
-            <Button
-              label="Ir para o pagamento"
-              onPress={() => navigation.navigate('Checkout')}
-            />
+            <Button label="Ir para o pagamento" onPress={goToPayment} />
           </View>
         </>
       )}

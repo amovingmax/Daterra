@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import { Alert, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Button } from '../../components/Button';
@@ -31,6 +31,14 @@ export function AuthHubScreen({ navigation }: Props) {
         style={styles.hero}
         imageStyle={styles.heroImage}
       >
+        <Pressable
+          onPress={() => navigation.getParent()?.goBack()}
+          style={styles.closeBtn}
+          hitSlop={10}
+          accessibilityLabel="Fechar e continuar como visitante"
+        >
+          <Text style={styles.closeIcon}>✕</Text>
+        </Pressable>
         <View style={styles.overlay}>
           <View style={styles.brand}>
             <Text style={styles.brandIcon}>🌱</Text>
@@ -86,6 +94,23 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     resizeMode: 'cover',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 16,
+    right: 20,
+    zIndex: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeIcon: {
+    color: colors.ink.inverse,
+    fontSize: 18,
+    fontWeight: typography.fontWeight.semibold,
   },
   overlay: {
     flex: 1,

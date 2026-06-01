@@ -59,5 +59,9 @@ enabled = true
 policy = "oneshot"
 inspector_port = 8083
 
+# delete-account exige o JWT do titular (LGPD art. 18 — direito de eliminação).
+[functions.delete-account]
+verify_jwt = true
+
 [analytics]
 enabled = false
