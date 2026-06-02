@@ -7,6 +7,7 @@ import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { supabase } from '../../lib/supabase';
+import { redirectTo } from '../../lib/oauth';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
@@ -17,9 +18,13 @@ export function LoginScreen({ navigation }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   async function handleSubmit() {
     setError(null);
+    setNeedsConfirm(false);
+    setResendMsg(null);
     const parsed = loginSchema.safeParse({ email, password });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? 'Dados inválidos');
@@ -31,10 +36,32 @@ export function LoginScreen({ navigation }: Props) {
     setLoading(false);
 
     if (signInError) {
-      setError('Email ou senha inválidos');
+      const unconfirmed =
+        signInError.code === 'email_not_confirmed' ||
+        /not confirmed|confirm/i.test(signInError.message);
+      if (unconfirmed) {
+        setNeedsConfirm(true);
+        setError('Seu email ainda não foi confirmado. Verifique sua caixa de entrada.');
+      } else {
+        setError('Email ou senha inválidos');
+      }
       return;
     }
     // AuthProvider escuta a mudança de sessão e redireciona pra Home automaticamente.
+  }
+
+  async function handleResend() {
+    setResendMsg(null);
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.trim(),
+      options: { emailRedirectTo: redirectTo },
+    });
+    setResendMsg(
+      resendError
+        ? 'Não foi possível reenviar agora. Tente em instantes.'
+        : 'Email de confirmação reenviado! 📩',
+    );
   }
 
   return (
@@ -73,6 +100,13 @@ export function LoginScreen({ navigation }: Props) {
         />
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        {needsConfirm ? (
+          <Pressable onPress={handleResend} hitSlop={8} style={styles.resend}>
+            <Text style={styles.resendText}>Reenviar email de confirmação</Text>
+          </Pressable>
+        ) : null}
+        {resendMsg ? <Text style={styles.resendMsg}>{resendMsg}</Text> : null}
 
         <View style={styles.spacer} />
         <Button label="Entrar" loading={loading} onPress={handleSubmit} />
@@ -117,6 +151,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 8,
   },
+  resend: { alignSelf: 'flex-start', paddingVertical: 4 },
+  resendText: {
+    color: colors.brand[600],
+    fontSize: 14,
+    fontWeight: typography.fontWeight.medium,
+    textDecorationLine: 'underline',
+  },
+  resendMsg: { color: colors.ink.secondary, fontSize: 13, marginTop: 4 },
   spacer: {
     height: 8,
   },

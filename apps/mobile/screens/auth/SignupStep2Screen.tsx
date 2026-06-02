@@ -8,6 +8,8 @@ import { Input } from '../../components/Input';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { fetchAddressByCEP } from '../../lib/viacep';
 import { supabase } from '../../lib/supabase';
+import { redirectTo } from '../../lib/oauth';
+import { savePendingAddress } from '../../lib/pending-address';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignupStep2'>;
@@ -76,6 +78,8 @@ export function SignupStep2Screen({ route, navigation }: Props) {
         email: step1.email,
         password: step1.password,
         options: {
+          // Link de confirmação volta pro app (deep link tratado no auth-context).
+          emailRedirectTo: redirectTo,
           data: {
             full_name: step1.full_name,
             phone: step1.phone,
@@ -106,10 +110,12 @@ export function SignupStep2Screen({ route, navigation }: Props) {
         }
         // AuthProvider redireciona pra Home automaticamente
       } else {
-        // Email confirmation está habilitado no projeto Supabase
+        // Email confirmation habilitado: sem sessão agora. Guarda o endereço pra
+        // inserir no 1º login (a RLS exige sessão), e manda confirmar o email.
+        await savePendingAddress(parsed.data);
         Alert.alert(
-          'Quase lá! 📩',
-          `Enviamos um email de confirmação pra ${step1.email}. Clique no link e depois faça login. Seu endereço fica salvo após a primeira entrada.`,
+          'Confirme seu email 📩',
+          `Enviamos um link de confirmação pra ${step1.email}. Confirme pra ativar sua conta e fazer login. Seu endereço é salvo automaticamente na primeira entrada.`,
           [{ text: 'OK', onPress: () => navigation.navigate('Login') }],
         );
       }

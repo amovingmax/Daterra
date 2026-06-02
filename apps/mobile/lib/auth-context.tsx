@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { createSessionFromUrl } from './oauth';
+import { flushPendingAddress } from './pending-address';
 
 interface AuthContextValue {
   session: Session | null;
@@ -44,6 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Ao logar (sessão aparece), insere o endereço pendente do cadastro com
+  // confirmação de email (guardado localmente até existir sessão).
+  useEffect(() => {
+    if (session?.user) flushPendingAddress(session.user.id);
+  }, [session?.user?.id]);
 
   // Processa deep links recebidos (ex.: link de reset de senha no email, retorno de OAuth
   // aberto fora do fluxo in-app). A troca de código dispara o onAuthStateChange acima.
