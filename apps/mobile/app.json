@@ -16,7 +16,7 @@
     "ios": {
       "bundleIdentifier": "app.daterra.mobile",
       "buildNumber": "1",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
