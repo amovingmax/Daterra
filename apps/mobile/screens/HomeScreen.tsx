@@ -80,7 +80,6 @@ const BANNER_SLIDES: BannerSlide[] = [
 interface Section {
   title: string;
   subtitle: string;
-  emoji: string;
   type: DBSupplier['type'];
 }
 
@@ -88,19 +87,16 @@ const SECTIONS: Section[] = [
   {
     title: 'Produtores e agroindústrias',
     subtitle: 'Direto da roça pra sua mesa',
-    emoji: '🌾',
     type: 'producer',
   },
   {
     title: 'Bares e restaurantes',
     subtitle: 'Pra comer no local ou pedir em casa',
-    emoji: '🍴',
     type: 'restaurant',
   },
   {
     title: 'Hotelaria',
     subtitle: 'Hospedagem com DNA potiguar',
-    emoji: '🏨',
     type: 'hospitality',
   },
 ];

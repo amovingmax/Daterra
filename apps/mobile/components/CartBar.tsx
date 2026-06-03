@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { useCart } from '../lib/cart-context';
@@ -16,7 +17,7 @@ export function CartBar({ onPress }: CartBarProps) {
     <View style={styles.wrap}>
       <Pressable style={styles.bar} onPress={onPress}>
         <View style={styles.iconBox}>
-          <Text style={styles.icon}>🛒</Text>
+          <Ionicons name="cart" size={18} color={colors.ink.inverse} />
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{itemCount}</Text>
           </View>
@@ -30,7 +31,7 @@ export function CartBar({ onPress }: CartBarProps) {
           </Text>
         </View>
         <Text style={styles.total}>{formatBRL(subtotalCents)}</Text>
-        <Text style={styles.chevron}>›</Text>
+        <Ionicons name="chevron-forward" size={20} color={colors.ink.inverse} />
       </Pressable>
     </View>
   );

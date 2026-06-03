@@ -3,6 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { maskPhoneBR, phoneSchema } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { ScreenContainer } from '../../components/ScreenContainer';
@@ -64,8 +65,13 @@ export function EditProfileScreen({ navigation }: Props) {
 
   return (
     <ScreenContainer>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-        <Text style={styles.back}>← Voltar</Text>
+      <Pressable
+        onPress={() => navigation.goBack()}
+        hitSlop={8}
+        style={{ flexDirection: 'row', alignItems: 'center' }}
+      >
+        <Ionicons name="chevron-back" size={18} color={colors.ink.secondary} />
+        <Text style={styles.back}>Voltar</Text>
       </Pressable>
       <Text style={styles.title}>Dados pessoais</Text>
 

@@ -72,8 +72,9 @@ export function CartScreen({ navigation }: Props) {
             </View>
 
             <View style={styles.warning}>
+              <Ionicons name="information-circle-outline" size={16} color={colors.gold[500]} />
               <Text style={styles.warningText}>
-                ℹ️ Pedidos do Da Terra são feitos por fornecedor — você não pode misturar produtos
+                Pedidos do Da Terra são feitos por fornecedor — você não pode misturar produtos
                 de fornecedores diferentes na mesma sacola.
               </Text>
             </View>
@@ -202,6 +203,9 @@ const styles = StyleSheet.create({
   },
   supplier: { marginTop: 4, color: colors.ink.secondary },
   warning: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
     marginHorizontal: 20,
     marginBottom: 16,
     padding: 14,
@@ -211,6 +215,7 @@ const styles = StyleSheet.create({
     borderColor: colors.gold[200],
   },
   warningText: {
+    flex: 1,
     fontSize: 13,
     color: colors.gold[500],
     lineHeight: 18,
