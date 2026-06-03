@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { z } from 'zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
@@ -44,7 +45,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
   if (sent) {
     return (
       <ScreenContainer>
-        <Text style={styles.emoji}>📩</Text>
+        <Ionicons name="mail-unread-outline" size={48} color={colors.brand[500]} style={styles.emoji} />
         <Text style={styles.title}>Olha seu email</Text>
         <Text style={styles.subtitle}>
           Se houver uma conta com <Text style={styles.bold}>{email.trim()}</Text>, enviamos um link

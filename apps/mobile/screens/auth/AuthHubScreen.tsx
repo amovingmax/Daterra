@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Button } from '../../components/Button';
@@ -37,11 +38,11 @@ export function AuthHubScreen({ navigation }: Props) {
           hitSlop={10}
           accessibilityLabel="Fechar e continuar como visitante"
         >
-          <Text style={styles.closeIcon}>✕</Text>
+          <Ionicons name="close" size={22} color={colors.ink.inverse} />
         </Pressable>
         <View style={styles.overlay}>
           <View style={styles.brand}>
-            <Text style={styles.brandIcon}>🌱</Text>
+            <Ionicons name="leaf" size={34} color={colors.ink.inverse} style={styles.brandIcon} />
             <Text style={styles.brandName}>Da Terra</Text>
           </View>
           <Text style={styles.headline}>Direto da terra potiguar pra sua mesa.</Text>

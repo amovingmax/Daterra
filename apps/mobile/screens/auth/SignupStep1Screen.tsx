@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { signupSchema, maskPhoneBR } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
@@ -102,7 +103,11 @@ export function SignupStep1Screen({ navigation }: Props) {
               style={styles.eyeBtn}
               accessibilityLabel={showPassword ? 'Esconder senha' : 'Mostrar senha'}
             >
-              <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁'}</Text>
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={colors.ink.tertiary}
+              />
             </Pressable>
           }
         />
@@ -122,7 +127,7 @@ export function SignupStep1Screen({ navigation }: Props) {
           hitSlop={8}
         >
           <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
-            {acceptedTerms && <Text style={styles.checkmark}>✓</Text>}
+            {acceptedTerms && <Ionicons name="checkmark" size={15} color={colors.ink.inverse} />}
           </View>
           <Text style={styles.termsText}>
             Li e aceito os{' '}

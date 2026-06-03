@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { passwordSchema } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Button } from '../../components/Button';
@@ -66,7 +67,11 @@ export function ResetPasswordScreen() {
               style={styles.eyeBtn}
               accessibilityLabel={show ? 'Esconder senha' : 'Mostrar senha'}
             >
-              <Text style={styles.eyeIcon}>{show ? '🙈' : '👁'}</Text>
+              <Ionicons
+                name={show ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={colors.ink.tertiary}
+              />
             </Pressable>
           }
         />
