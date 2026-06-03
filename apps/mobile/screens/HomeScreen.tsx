@@ -22,7 +22,12 @@ import type {
 import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Ionicons } from '@expo/vector-icons';
-import { categoryIcon, supplierTypeIcon, type IoniconName } from '../lib/icons';
+import {
+  categoryIcon,
+  categoryImage,
+  supplierTypeIcon,
+  type IoniconName,
+} from '../lib/icons';
 import { useAuth } from '../lib/auth-context';
 import {
   listActiveSuppliers,
@@ -246,26 +251,33 @@ export function HomeScreen({ navigation }: Props) {
 
         <Text style={styles.sectionTitle}>Categorias</Text>
         <View style={styles.categories}>
-          {FEITO_POTIGUAR_CATEGORIES.slice(0, 3).map((cat) => (
-            <Pressable
-              key={cat.slug}
-              style={styles.categoryItem}
-              onPress={() => openCategory(cat.slug)}
-            >
-              <View style={styles.categoryIconBox}>
-                <Ionicons name={categoryIcon(cat.slug)} size={24} color={colors.brand[600]} />
-              </View>
-              <Text style={styles.categoryLabel} numberOfLines={2}>
-                {cat.label}
-              </Text>
-            </Pressable>
-          ))}
+          {FEITO_POTIGUAR_CATEGORIES.slice(0, 3).map((cat) => {
+            const img = categoryImage(cat.slug);
+            return (
+              <Pressable
+                key={cat.slug}
+                style={styles.categoryItem}
+                onPress={() => openCategory(cat.slug)}
+              >
+                <View style={styles.categoryPhoto}>
+                  {img ? (
+                    <Image source={{ uri: img }} style={styles.categoryPhotoImg} />
+                  ) : (
+                    <Ionicons name={categoryIcon(cat.slug)} size={26} color={colors.brand[600]} />
+                  )}
+                </View>
+                <Text style={styles.categoryLabel} numberOfLines={2}>
+                  {cat.label}
+                </Text>
+              </Pressable>
+            );
+          })}
           <Pressable
             style={styles.categoryItem}
             onPress={() => navigation.navigate('CategoriesModal')}
           >
-            <View style={[styles.categoryIconBox, styles.categoryIconBoxMore]}>
-              <Ionicons name="grid-outline" size={22} color={colors.brand[600]} />
+            <View style={[styles.categoryPhoto, styles.categoryMore]}>
+              <Ionicons name="grid" size={26} color={colors.brand[600]} />
             </View>
             <Text style={styles.categoryLabel} numberOfLines={2}>
               Ver mais
@@ -546,46 +558,41 @@ const styles = StyleSheet.create({
 
   categories: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     marginBottom: 24,
-    rowGap: 12,
   },
   categoryItem: {
-    width: '48%',
-    flexDirection: 'row',
+    width: '23%',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.surface.primary,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  categoryIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.brand[50],
+  categoryPhoto: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 18,
+    backgroundColor: colors.sand[100],
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  categoryIconBoxMore: {
+  categoryPhotoImg: { width: '100%', height: '100%' },
+  categoryMore: {
     backgroundColor: colors.brand[50],
     borderWidth: 1,
     borderColor: colors.brand[100],
   },
   categoryLabel: {
-    flex: 1,
-    fontSize: 13,
+    marginTop: 8,
+    fontSize: 12,
+    textAlign: 'center',
     color: colors.ink.primary,
     fontWeight: typography.fontWeight.medium,
-    lineHeight: 16,
+    lineHeight: 15,
   },
 
   bannerWrap: {

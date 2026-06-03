@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -7,7 +7,7 @@ import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Ionicons } from '@expo/vector-icons';
 import { Bounded } from '../components/Bounded';
-import { categoryIcon } from '../lib/icons';
+import { categoryIcon, categoryImage } from '../lib/icons';
 import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'CategoriesModal'>;
@@ -39,20 +39,27 @@ export function CategoriesModalScreen({ navigation }: Props) {
           As 8 categorias do programa Feito Potiguar.
         </Text>
         <View style={styles.grid}>
-          {FEITO_POTIGUAR_CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat.slug}
-              style={styles.gridItem}
-              onPress={() => openCategory(cat.slug)}
-            >
-              <View style={styles.iconBox}>
-                <Ionicons name={categoryIcon(cat.slug)} size={30} color={colors.brand[600]} />
-              </View>
-              <Text style={styles.label} numberOfLines={2}>
-                {cat.label}
-              </Text>
-            </Pressable>
-          ))}
+          {FEITO_POTIGUAR_CATEGORIES.map((cat) => {
+            const img = categoryImage(cat.slug);
+            return (
+              <Pressable
+                key={cat.slug}
+                style={styles.gridItem}
+                onPress={() => openCategory(cat.slug)}
+              >
+                <View style={styles.photo}>
+                  {img ? (
+                    <Image source={{ uri: img }} style={styles.photoImg} />
+                  ) : (
+                    <Ionicons name={categoryIcon(cat.slug)} size={32} color={colors.brand[600]} />
+                  )}
+                </View>
+                <Text style={styles.label} numberOfLines={2}>
+                  {cat.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </Bounded>
       </ScrollView>
@@ -95,25 +102,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  iconBox: {
-    width: 76,
-    height: 76,
+  photo: {
+    width: '100%',
+    aspectRatio: 1,
     borderRadius: 20,
-    backgroundColor: colors.surface.primary,
+    backgroundColor: colors.sand[100],
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
     elevation: 2,
   },
-  icon: { fontSize: 38 },
+  photoImg: { width: '100%', height: '100%' },
   label: {
-    fontSize: 12,
+    fontSize: 13,
     textAlign: 'center',
     color: colors.ink.primary,
-    lineHeight: 15,
+    lineHeight: 16,
   },
 });
