@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { CONTENT_MAX_WIDTH } from '../../lib/responsive';
 import { Button } from '../../components/Button';
 import { useAuth } from '../../lib/auth-context';
@@ -66,8 +67,13 @@ export function AddressesListScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <Text style={styles.back}>← Voltar</Text>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          hitSlop={8}
+          style={{ flexDirection: 'row', alignItems: 'center' }}
+        >
+          <Ionicons name="chevron-back" size={18} color={colors.ink.secondary} />
+          <Text style={styles.back}>Voltar</Text>
         </Pressable>
         <Text style={styles.title}>Endereços</Text>
       </View>
@@ -81,10 +87,13 @@ export function AddressesListScreen({ navigation }: Props) {
           renderItem={({ item }) => (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardLabel}>
-                  {item.label}
-                  {item.is_primary && <Text style={styles.primaryFlag}>  ★ Principal</Text>}
-                </Text>
+                <Text style={styles.cardLabel}>{item.label}</Text>
+                {item.is_primary && (
+                  <View style={styles.primaryFlag}>
+                    <Ionicons name="star" size={11} color={colors.gold[500]} />
+                    <Text style={styles.primaryFlagText}>Principal</Text>
+                  </View>
+                )}
               </View>
               <Text style={styles.cardLine}>
                 {item.street}, {item.number}
@@ -125,7 +134,7 @@ export function AddressesListScreen({ navigation }: Props) {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>📍</Text>
+              <Ionicons name="location-outline" size={48} color={colors.sand[300]} style={styles.emptyEmoji} />
               <Text style={styles.emptyText}>Você ainda não tem endereços cadastrados.</Text>
             </View>
           }
@@ -162,17 +171,19 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
-  cardHeader: { marginBottom: 4 },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
   cardLabel: {
     fontSize: 16,
     fontWeight: typography.fontWeight.semibold,
     color: colors.ink.primary,
   },
-  primaryFlag: {
-    fontSize: 12,
-    color: colors.gold[500],
-    fontWeight: typography.fontWeight.regular,
-  },
+  primaryFlag: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  primaryFlagText: { fontSize: 12, color: colors.gold[500] },
   cardLine: { fontSize: 14, color: colors.ink.primary, marginTop: 2 },
   cardCEP: { fontSize: 13, color: colors.ink.secondary, marginTop: 4 },
   cardActions: { flexDirection: 'row', marginTop: 12, gap: 8 },

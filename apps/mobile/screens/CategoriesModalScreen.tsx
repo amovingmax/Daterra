@@ -5,7 +5,9 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { Bounded } from '../components/Bounded';
+import { categoryIcon } from '../lib/icons';
 import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'CategoriesModal'>;
@@ -25,7 +27,7 @@ export function CategoriesModalScreen({ navigation }: Props) {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <Text style={styles.close}>✕</Text>
+          <Ionicons name="close" size={24} color={colors.ink.primary} />
         </Pressable>
         <Text style={styles.title}>Todas as categorias</Text>
         <View style={{ width: 28 }} />
@@ -44,7 +46,7 @@ export function CategoriesModalScreen({ navigation }: Props) {
               onPress={() => openCategory(cat.slug)}
             >
               <View style={styles.iconBox}>
-                <Text style={styles.icon}>{cat.icon}</Text>
+                <Ionicons name={categoryIcon(cat.slug)} size={30} color={colors.brand[600]} />
               </View>
               <Text style={styles.label} numberOfLines={2}>
                 {cat.label}

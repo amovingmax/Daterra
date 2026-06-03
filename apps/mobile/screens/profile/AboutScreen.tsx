@@ -2,6 +2,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { Bounded } from '../../components/Bounded';
 import { PRIVACY_POLICY_URL } from '../../lib/legal';
 import type { ProfileStackParamList } from '../../navigation/types';
@@ -13,12 +14,17 @@ export function AboutScreen({ navigation }: Props) {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Bounded>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <Text style={styles.back}>← Voltar</Text>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          hitSlop={8}
+          style={{ flexDirection: 'row', alignItems: 'center' }}
+        >
+          <Ionicons name="chevron-back" size={18} color={colors.ink.secondary} />
+          <Text style={styles.back}>Voltar</Text>
         </Pressable>
         <Text style={styles.title}>Sobre o Da Terra</Text>
 
-        <Text style={styles.brandLogo}>🌱</Text>
+        <Ionicons name="leaf" size={64} color={colors.brand[500]} style={styles.brandLogo} />
         <Text style={styles.brand}>Da Terra</Text>
 
         <Text style={styles.body}>
@@ -39,18 +45,23 @@ export function AboutScreen({ navigation }: Props) {
           onPress={() => Linking.openURL('https://feitopotiguar.com.br')}
           style={styles.link}
         >
-          <Text style={styles.linkText}>🏅 Programa Feito Potiguar →</Text>
+          <Ionicons name="ribbon-outline" size={18} color={colors.brand[600]} />
+          <Text style={styles.linkText}>Programa Feito Potiguar</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.ink.tertiary} />
         </Pressable>
 
         <Pressable
           onPress={() => Linking.openURL('mailto:contato@daterra.app')}
           style={styles.link}
         >
-          <Text style={styles.linkText}>✉️ contato@daterra.app</Text>
+          <Ionicons name="mail-outline" size={18} color={colors.brand[600]} />
+          <Text style={styles.linkText}>contato@daterra.app</Text>
         </Pressable>
 
         <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} style={styles.link}>
-          <Text style={styles.linkText}>🔒 Política de Privacidade →</Text>
+          <Ionicons name="lock-closed-outline" size={18} color={colors.brand[600]} />
+          <Text style={styles.linkText}>Política de Privacidade</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.ink.tertiary} />
         </Pressable>
 
         <Text style={styles.footer}>MVP v0.0.1 · Abril 2026</Text>
@@ -91,11 +102,14 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   link: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.sand[200],
   },
-  linkText: { fontSize: 15, color: colors.brand[600] },
+  linkText: { flex: 1, fontSize: 15, color: colors.brand[600] },
   footer: {
     fontSize: 12,
     color: colors.ink.tertiary,

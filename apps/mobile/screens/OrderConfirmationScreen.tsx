@@ -6,6 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
 import { supabase, type DBOrder } from '../lib/supabase';
@@ -51,7 +52,7 @@ export function OrderConfirmationScreen({ route }: Props) {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.content}>
-        <Text style={styles.checkmark}>🌱</Text>
+        <Ionicons name="checkmark-circle" size={72} color={colors.brand[500]} style={styles.checkmark} />
         <Text style={styles.title}>Pedido confirmado!</Text>
         <Text style={styles.subtitle}>
           O fornecedor já foi avisado e tem até 15 minutos pra aceitar.

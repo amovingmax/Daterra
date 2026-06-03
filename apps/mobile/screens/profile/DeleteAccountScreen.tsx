@@ -3,6 +3,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { Bounded } from '../../components/Bounded';
 import { CONTENT_MAX_WIDTH } from '../../lib/responsive';
 import { Button } from '../../components/Button';
@@ -53,8 +54,13 @@ export function DeleteAccountScreen({ navigation }: Props) {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Bounded>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-          <Text style={styles.back}>← Voltar</Text>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          hitSlop={8}
+          style={{ flexDirection: 'row', alignItems: 'center' }}
+        >
+          <Ionicons name="chevron-back" size={18} color={colors.ink.secondary} />
+          <Text style={styles.back}>Voltar</Text>
         </Pressable>
 
         <Text style={styles.title}>Excluir minha conta</Text>
@@ -77,21 +83,30 @@ export function DeleteAccountScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.retentionBox}>
+          <Ionicons
+            name="document-text-outline"
+            size={16}
+            color={colors.ink.secondary}
+            style={{ marginTop: 2 }}
+          />
           <Text style={styles.retentionText}>
-            📑 O <Text style={styles.bold}>histórico de pedidos</Text> é mantido de forma{' '}
+            O <Text style={styles.bold}>histórico de pedidos</Text> é mantido de forma{' '}
             <Text style={styles.bold}>anonimizada</Text> (sem seus dados pessoais) para cumprir
             obrigações legais e fiscais de guarda, conforme permite a própria LGPD (art. 16, I).
           </Text>
         </View>
 
-        <Text style={styles.warning}>
-          ⚠️ Esta ação é <Text style={styles.bold}>permanente</Text> e não pode ser desfeita. Você
-          perde o acesso à conta e aos pedidos.
-        </Text>
+        <View style={styles.warningRow}>
+          <Ionicons name="warning-outline" size={18} color={colors.ink.secondary} />
+          <Text style={styles.warning}>
+            Esta ação é <Text style={styles.bold}>permanente</Text> e não pode ser desfeita. Você
+            perde o acesso à conta e aos pedidos.
+          </Text>
+        </View>
 
         <Pressable style={styles.agreeRow} onPress={() => setAgree((v) => !v)} hitSlop={6}>
           <View style={[styles.checkbox, agree && styles.checkboxOn]}>
-            {agree && <Text style={styles.checkboxTick}>✓</Text>}
+            {agree && <Ionicons name="checkmark" size={14} color={colors.ink.inverse} />}
           </View>
           <Text style={styles.agreeText}>
             Entendo que a exclusão é permanente e autorizo a remoção dos meus dados.
@@ -134,21 +149,25 @@ const styles = StyleSheet.create({
   lgpdText: { fontSize: 14, color: colors.ink.secondary, lineHeight: 21 },
   bold: { fontWeight: typography.fontWeight.semibold, color: colors.ink.primary },
   retentionBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
     backgroundColor: colors.sand[100],
     borderRadius: 12,
     padding: 14,
     marginBottom: 16,
   },
-  retentionText: { fontSize: 13, color: colors.ink.secondary, lineHeight: 20 },
+  retentionText: { flex: 1, fontSize: 13, color: colors.ink.secondary, lineHeight: 20 },
   list: { marginBottom: 16, gap: 8 },
   listRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
   listBullet: { color: colors.ink.tertiary, fontSize: 15 },
   listText: { flex: 1, fontSize: 14, color: colors.ink.primary, lineHeight: 20 },
+  warningRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 20 },
   warning: {
+    flex: 1,
     fontSize: 14,
     color: colors.ink.secondary,
     lineHeight: 20,
-    marginBottom: 20,
   },
   agreeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   checkbox: {
