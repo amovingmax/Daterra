@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, typography } from '@daterra/ui/tokens';
 
 import { AuthProvider, useAuth } from './lib/auth-context';
@@ -130,7 +131,9 @@ function MainTabs() {
         component={HomeStackNavigator}
         options={{
           tabBarLabel: 'Início',
-          tabBarIcon: ({ focused }) => <TabIcon icon="🏠" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon name="home" outline="home-outline" focused={focused} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -138,7 +141,9 @@ function MainTabs() {
         component={SearchStackNavigator}
         options={{
           tabBarLabel: 'Busca',
-          tabBarIcon: ({ focused }) => <TabIcon icon="🔍" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon name="search" outline="search-outline" focused={focused} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -146,7 +151,9 @@ function MainTabs() {
         component={SuperScreen}
         options={{
           tabBarLabel: 'Super',
-          tabBarIcon: ({ focused }) => <TabIcon icon="⚡" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon name="flash" outline="flash-outline" focused={focused} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -154,7 +161,9 @@ function MainTabs() {
         component={OrdersStackNavigator}
         options={{
           tabBarLabel: 'Pedidos',
-          tabBarIcon: ({ focused }) => <TabIcon icon="📦" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon name="receipt" outline="receipt-outline" focused={focused} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -162,15 +171,27 @@ function MainTabs() {
         component={ProfileStackNavigator}
         options={{
           tabBarLabel: 'Perfil',
-          tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon name="person" outline="person-outline" focused={focused} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
   );
 }
 
-function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
-  return <Text style={{ fontSize: focused ? 24 : 22, opacity: focused ? 1 : 0.6 }}>{icon}</Text>;
+function TabIcon({
+  name,
+  outline,
+  focused,
+  color,
+}: {
+  name: keyof typeof Ionicons.glyphMap;
+  outline: keyof typeof Ionicons.glyphMap;
+  focused: boolean;
+  color: string;
+}) {
+  return <Ionicons name={focused ? name : outline} size={24} color={color} />;
 }
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
