@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Bounded } from '../../components/Bounded';
+import { PRIVACY_POLICY_URL } from '../../lib/legal';
 import type { ProfileStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'About'>;
@@ -46,6 +47,10 @@ export function AboutScreen({ navigation }: Props) {
           style={styles.link}
         >
           <Text style={styles.linkText}>✉️ contato@daterra.app</Text>
+        </Pressable>
+
+        <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} style={styles.link}>
+          <Text style={styles.linkText}>🔒 Política de Privacidade →</Text>
         </Pressable>
 
         <Text style={styles.footer}>MVP v0.0.1 · Abril 2026</Text>

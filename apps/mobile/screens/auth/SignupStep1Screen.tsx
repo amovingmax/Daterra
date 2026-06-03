@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { signupSchema, maskPhoneBR } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { ScreenContainer } from '../../components/ScreenContainer';
+import { PRIVACY_POLICY_URL } from '../../lib/legal';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignupStep1'>;
@@ -126,7 +127,13 @@ export function SignupStep1Screen({ navigation }: Props) {
           <Text style={styles.termsText}>
             Li e aceito os{' '}
             <Text style={styles.termsLink}>Termos de Uso</Text> e a{' '}
-            <Text style={styles.termsLink}>Política de Privacidade</Text>.
+            <Text
+              style={styles.termsLink}
+              onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+            >
+              Política de Privacidade
+            </Text>
+            .
           </Text>
         </Pressable>
         {errors.accepted_terms ? (
