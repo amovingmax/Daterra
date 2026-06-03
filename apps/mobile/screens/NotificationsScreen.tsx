@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, typography } from '@daterra/ui/tokens';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { useAuth } from '../lib/auth-context';
@@ -24,17 +25,17 @@ import type { HomeStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Notifications'>;
 
-const KIND_EMOJI: Record<string, string> = {
-  welcome: '👋',
-  order_received: '✅',
-  order_accepted: '👨‍🍳',
-  order_preparing: '🥫',
-  order_ready: '📦',
-  order_out_for_delivery: '🚚',
-  order_delivered: '🎉',
-  order_cancelled: '❌',
-  promotion: '🏷️',
-  news: '📣',
+const KIND_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
+  welcome: 'happy-outline',
+  order_received: 'checkmark-circle-outline',
+  order_accepted: 'restaurant-outline',
+  order_preparing: 'flame-outline',
+  order_ready: 'cube-outline',
+  order_out_for_delivery: 'bicycle-outline',
+  order_delivered: 'checkmark-done-circle-outline',
+  order_cancelled: 'close-circle-outline',
+  promotion: 'pricetag-outline',
+  news: 'megaphone-outline',
 };
 
 export function NotificationsScreen({ navigation }: Props) {
@@ -87,7 +88,10 @@ export function NotificationsScreen({ navigation }: Props) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Text style={styles.back}>← Voltar</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="chevron-back" size={18} color={colors.ink.secondary} />
+              <Text style={styles.back}>Voltar</Text>
+            </View>
           </Pressable>
           {hasUnread && (
             <Pressable onPress={handleMarkAllRead} hitSlop={8}>
@@ -109,7 +113,12 @@ export function NotificationsScreen({ navigation }: Props) {
               onPress={() => handleTap(item)}
               style={[styles.item, !item.read_at && styles.itemUnread]}
             >
-              <Text style={styles.itemEmoji}>{KIND_EMOJI[item.kind] ?? '🔔'}</Text>
+              <Ionicons
+                name={KIND_ICON[item.kind] ?? 'notifications-outline'}
+                size={22}
+                color={colors.brand[600]}
+                style={styles.itemEmoji}
+              />
               <View style={styles.itemBody}>
                 <Text style={styles.itemTitle} numberOfLines={1}>
                   {item.title}
@@ -131,7 +140,7 @@ export function NotificationsScreen({ navigation }: Props) {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>🔔</Text>
+              <Ionicons name="notifications-outline" size={48} color={colors.sand[300]} style={styles.emptyEmoji} />
               <Text style={styles.emptyTitle}>Sem notificações por aqui</Text>
               <Text style={styles.emptyText}>
                 Você vai receber avisos sobre pedidos, novidades e promoções.

@@ -16,6 +16,7 @@ import type {
 } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { Bounded } from '../components/Bounded';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
@@ -55,7 +56,7 @@ export function CartScreen({ navigation }: Props) {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       {itemCount === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>🛒</Text>
+          <Ionicons name="cart-outline" size={64} color={colors.sand[300]} style={styles.emptyEmoji} />
           <Text style={styles.emptyTitle}>Sua sacola está vazia</Text>
           <Text style={styles.emptyText}>
             Encontre produtos potiguares no Início e adicione na sacola.
@@ -84,7 +85,7 @@ export function CartScreen({ navigation }: Props) {
                     {item.photo_url ? (
                       <Image source={{ uri: item.photo_url }} style={styles.itemImage} />
                     ) : (
-                      <Text style={styles.itemImagePlaceholder}>🥫</Text>
+                      <Ionicons name="fast-food-outline" size={26} color={colors.sand[300]} />
                     )}
                   </View>
                   <View style={styles.itemInfo}>
@@ -92,9 +93,12 @@ export function CartScreen({ navigation }: Props) {
                       {item.name}
                     </Text>
                     {item.note && (
-                      <Text style={styles.itemNote} numberOfLines={1}>
-                        📝 {item.note}
-                      </Text>
+                      <View style={styles.itemNoteRow}>
+                        <Ionicons name="create-outline" size={12} color={colors.ink.tertiary} />
+                        <Text style={styles.itemNote} numberOfLines={1}>
+                          {item.note}
+                        </Text>
+                      </View>
                     )}
                     <View style={styles.itemControls}>
                       <View style={styles.qtyControl}>
@@ -117,7 +121,7 @@ export function CartScreen({ navigation }: Props) {
                         hitSlop={6}
                         style={styles.trashBtn}
                       >
-                        <Text style={styles.trashIcon}>🗑️</Text>
+                        <Ionicons name="trash-outline" size={18} color={colors.status.danger} />
                       </Pressable>
                     </View>
                   </View>
@@ -242,7 +246,8 @@ const styles = StyleSheet.create({
     color: colors.ink.primary,
     fontWeight: typography.fontWeight.medium,
   },
-  itemNote: { fontSize: 12, color: colors.ink.tertiary, marginTop: 2 },
+  itemNote: { flex: 1, fontSize: 12, color: colors.ink.tertiary },
+  itemNoteRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   itemControls: {
     flexDirection: 'row',
     alignItems: 'center',

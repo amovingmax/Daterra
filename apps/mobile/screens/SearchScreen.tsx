@@ -15,7 +15,9 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES, formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
+import { categoryIcon, supplierTypeIcon } from '../lib/icons';
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -30,10 +32,10 @@ type ResultMode = 'products' | 'suppliers';
 
 type Props = NativeStackScreenProps<SearchStackParamList, 'Search'>;
 
-const TYPE_FILTERS: { label: string; emoji: string; value: DBSupplier['type'] }[] = [
-  { label: 'Produtores', emoji: '🌾', value: 'producer' },
-  { label: 'Restaurantes', emoji: '🍴', value: 'restaurant' },
-  { label: 'Hotelaria', emoji: '🏨', value: 'hospitality' },
+const TYPE_FILTERS: { label: string; value: DBSupplier['type'] }[] = [
+  { label: 'Produtores', value: 'producer' },
+  { label: 'Restaurantes', value: 'restaurant' },
+  { label: 'Hotelaria', value: 'hospitality' },
 ];
 
 const TRENDING = ['Mel', 'Queijo coalho', 'Tapioca', 'Cachaça', 'Doce de caju', 'Granola'];
@@ -167,7 +169,7 @@ export function SearchScreen({ route }: Props) {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       {/* Search bar */}
       <View style={styles.searchBox}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Ionicons name="search" size={18} color={colors.ink.tertiary} style={styles.searchIcon} />
         <TextInput
           value={query}
           onChangeText={setQuery}
@@ -198,9 +200,11 @@ export function SearchScreen({ route }: Props) {
                   onPress={() => handleSelectType(active ? null : t.value)}
                   style={[styles.pill, active && styles.pillActive]}
                 >
-                  <Text style={[styles.pillEmoji, active && styles.pillTextActive]}>
-                    {t.emoji}
-                  </Text>
+                  <Ionicons
+                    name={supplierTypeIcon(t.value)}
+                    size={15}
+                    color={active ? colors.brand[700] : colors.ink.secondary}
+                  />
                   <Text style={[styles.pillText, active && styles.pillTextActive]}>
                     {t.label}
                   </Text>
@@ -223,9 +227,11 @@ export function SearchScreen({ route }: Props) {
                 onPress={() => handleSelectCategory(active ? null : c.slug)}
                 style={[styles.pill, active && styles.pillActive]}
               >
-                <Text style={[styles.pillEmoji, active && styles.pillTextActive]}>
-                  {c.icon}
-                </Text>
+                <Ionicons
+                  name={categoryIcon(c.slug)}
+                  size={15}
+                  color={active ? colors.brand[700] : colors.ink.secondary}
+                />
                 <Text style={[styles.pillText, active && styles.pillTextActive]}>
                   {c.label}
                 </Text>
@@ -330,7 +336,7 @@ function ProductResultsList({
   if (results.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyEmoji}>🥫</Text>
+        <Ionicons name="search-outline" size={48} color={colors.sand[300]} style={styles.emptyEmoji} />
         <Text style={styles.emptyTitle}>Nenhum produto encontrado</Text>
         <Text style={styles.emptyText}>
           Tente outra categoria ou termo. Você também pode ver os produtores na aba acima.
@@ -351,7 +357,7 @@ function ProductResultsList({
               {photo ? (
                 <Image source={{ uri: photo }} style={styles.resultImageInner} />
               ) : (
-                <Text style={styles.resultImagePlaceholder}>🥫</Text>
+                <Ionicons name="fast-food-outline" size={26} color={colors.sand[300]} />
               )}
             </View>
             <View style={styles.resultBody}>
@@ -359,7 +365,7 @@ function ProductResultsList({
                 {item.name}
               </Text>
               <Text style={styles.resultMeta} numberOfLines={1}>
-                🏪 {item.supplier_name}
+                {item.supplier_name}
                 {item.supplier_city ? ` · ${item.supplier_city}` : ''}
               </Text>
               <Text style={styles.resultPrice}>
@@ -400,7 +406,8 @@ function InitialState({
               onPress={() => onTrending(t)}
               style={[styles.pill, styles.pillTrending]}
             >
-              <Text style={styles.pillTextTrending}>🔥 {t}</Text>
+              <Ionicons name="flame" size={13} color={colors.accent[400]} />
+              <Text style={styles.pillTextTrending}>{t}</Text>
             </Pressable>
           ))}
         </View>
@@ -421,10 +428,15 @@ function InitialState({
               onPress={() => onRecent(term)}
               style={styles.recentRow}
             >
-              <Text style={styles.recentClock}>🕐</Text>
+              <Ionicons
+                name="time-outline"
+                size={16}
+                color={colors.ink.tertiary}
+                style={styles.recentClock}
+              />
               <Text style={styles.recentText}>{term}</Text>
               <Pressable onPress={() => onRemoveRecent(term)} hitSlop={8}>
-                <Text style={styles.recentClose}>✕</Text>
+                <Ionicons name="close" size={16} color={colors.ink.tertiary} />
               </Pressable>
             </Pressable>
           ))}
@@ -449,7 +461,7 @@ function ResultsList({
   if (results.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyEmoji}>🔍</Text>
+        <Ionicons name="search-outline" size={48} color={colors.sand[300]} style={styles.emptyEmoji} />
         <Text style={styles.emptyTitle}>Nada encontrado</Text>
         <Text style={styles.emptyText}>
           Tente outro termo ou ajuste os filtros acima.
@@ -467,16 +479,19 @@ function ResultsList({
             {item.cover_url ? (
               <Image source={{ uri: item.cover_url }} style={styles.resultImageInner} />
             ) : (
-              <Text style={styles.resultImagePlaceholder}>🌱</Text>
+              <Ionicons name="storefront-outline" size={26} color={colors.sand[300]} />
             )}
           </View>
           <View style={styles.resultBody}>
             <Text style={styles.resultName} numberOfLines={1}>
               {item.name}
             </Text>
-            <Text style={styles.resultMeta} numberOfLines={1}>
-              📍 {item.city ?? '—'} · {labelForType(item.type)}
-            </Text>
+            <View style={styles.resultMetaRow}>
+              <Ionicons name="location-outline" size={12} color={colors.ink.secondary} />
+              <Text style={styles.resultMeta} numberOfLines={1}>
+                {item.city ?? '—'} · {labelForType(item.type)}
+              </Text>
+            </View>
           </View>
           <Text style={styles.resultChevron}>›</Text>
         </Pressable>
@@ -606,7 +621,8 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
     color: colors.ink.primary,
   },
-  resultMeta: { fontSize: 12, color: colors.ink.secondary, marginTop: 2 },
+  resultMeta: { fontSize: 12, color: colors.ink.secondary },
+  resultMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   resultPrice: {
     fontSize: 14,
     fontWeight: typography.fontWeight.bold,

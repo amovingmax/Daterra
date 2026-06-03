@@ -21,6 +21,8 @@ import type {
 } from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
+import { categoryIcon, supplierTypeIcon, type IoniconName } from '../lib/icons';
 import { useAuth } from '../lib/auth-context';
 import {
   listActiveSuppliers,
@@ -42,7 +44,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 interface BannerSlide {
   title: string;
   subtitle: string;
-  emoji: string;
+  icon: IoniconName;
   bg: string;
   fg: string;
   accent: string;
@@ -52,7 +54,7 @@ const BANNER_SLIDES: BannerSlide[] = [
   {
     title: 'Direto da terra potiguar',
     subtitle: 'Produtos artesanais com Selo Feito Potiguar — entrega em todo RN.',
-    emoji: '🌱',
+    icon: 'leaf',
     bg: colors.brand[500],
     fg: colors.ink.inverse,
     accent: colors.brand[100],
@@ -60,7 +62,7 @@ const BANNER_SLIDES: BannerSlide[] = [
   {
     title: 'Selo Feito Potiguar',
     subtitle: 'Curadoria oficial: SEBRAE/RN, FAERN, FIERN e FECOMÉRCIO validam cada loja.',
-    emoji: '🏅',
+    icon: 'ribbon',
     bg: colors.gold[300],
     fg: colors.ink.primary,
     accent: colors.gold[500],
@@ -68,7 +70,7 @@ const BANNER_SLIDES: BannerSlide[] = [
   {
     title: 'Comprou, chegou.',
     subtitle: 'Entrega na Grande Natal e RN inteiro · pagamento por Pix sem taxa.',
-    emoji: '🚚',
+    icon: 'bicycle',
     bg: colors.accent[400],
     fg: colors.ink.inverse,
     accent: colors.accent[100],
@@ -199,7 +201,10 @@ export function HomeScreen({ navigation }: Props) {
         <Bounded maxWidth={CONTENT_MAX_WIDTH}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <Text style={styles.brand}>🌱 Da Terra</Text>
+            <View style={styles.brandRow}>
+              <Ionicons name="leaf" size={22} color={colors.brand[500]} />
+              <Text style={styles.brand}>Da Terra</Text>
+            </View>
             {user ? (
               <Pressable
                 onPress={() => navigation.navigate('Notifications')}
@@ -207,7 +212,7 @@ export function HomeScreen({ navigation }: Props) {
                 hitSlop={6}
                 accessibilityLabel="Notificações"
               >
-                <Text style={styles.bellIcon}>🔔</Text>
+                <Ionicons name="notifications-outline" size={20} color={colors.ink.primary} />
                 {unreadCount > 0 && (
                   <View style={styles.bellBadge}>
                     <Text style={styles.bellBadgeText}>
@@ -227,10 +232,13 @@ export function HomeScreen({ navigation }: Props) {
             )}
           </View>
           <Text style={styles.greeting}>
-            {firstName ? `Olá, ${firstName}` : 'Bem-vindo ao Da Terra 👋'}
+            {firstName ? `Olá, ${firstName}` : 'Bem-vindo ao Da Terra'}
           </Text>
           {user ? (
-            <Text style={styles.address}>📍 Rio Grande do Norte</Text>
+            <View style={styles.addressRow}>
+              <Ionicons name="location-outline" size={14} color={colors.ink.secondary} />
+              <Text style={styles.address}>Rio Grande do Norte</Text>
+            </View>
           ) : (
             <Pressable onPress={() => rootNav.navigate('Auth', { screen: 'AuthHub' })} hitSlop={4}>
               <Text style={styles.loginHint}>
@@ -249,7 +257,7 @@ export function HomeScreen({ navigation }: Props) {
               onPress={() => openCategory(cat.slug)}
             >
               <View style={styles.categoryIconBox}>
-                <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                <Ionicons name={categoryIcon(cat.slug)} size={32} color={colors.brand[600]} />
               </View>
               <Text style={styles.categoryLabel} numberOfLines={2}>
                 {cat.label}
@@ -261,7 +269,7 @@ export function HomeScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('CategoriesModal')}
           >
             <View style={[styles.categoryIconBox, styles.categoryIconBoxMore]}>
-              <Text style={styles.categoryIconMore}>⊞</Text>
+              <Ionicons name="grid-outline" size={28} color={colors.brand[600]} />
             </View>
             <Text style={styles.categoryLabel} numberOfLines={2}>
               Ver mais
@@ -285,7 +293,12 @@ export function HomeScreen({ navigation }: Props) {
                   { width: bannerWidth, backgroundColor: slide.bg },
                 ]}
               >
-                <Text style={styles.bannerEmoji}>{slide.emoji}</Text>
+                <Ionicons
+                  name={slide.icon}
+                  size={42}
+                  color={slide.fg}
+                  style={styles.bannerEmoji}
+                />
                 <Text style={[styles.bannerTitle, { color: slide.fg }]}>{slide.title}</Text>
                 <Text style={[styles.bannerSubtitle, { color: slide.accent }]}>
                   {slide.subtitle}
@@ -307,7 +320,10 @@ export function HomeScreen({ navigation }: Props) {
           <View style={styles.popularBlock}>
             <View style={styles.popularHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.popularTitle}>🔥 Mais pedidos no Da Terra</Text>
+                <View style={styles.iconTitleRow}>
+                  <Ionicons name="flame" size={16} color={colors.accent[400]} />
+                  <Text style={styles.popularTitle}>Mais pedidos no Da Terra</Text>
+                </View>
                 <Text style={styles.popularSubtitle}>Os favoritos da galera potiguar</Text>
               </View>
             </View>
@@ -331,9 +347,11 @@ export function HomeScreen({ navigation }: Props) {
                         style={styles.popularAvatarImg}
                       />
                     ) : (
-                      <Text style={styles.popularAvatarPlaceholder}>
-                        {emojiForType(item.type)}
-                      </Text>
+                      <Ionicons
+                        name={supplierTypeIcon(item.type)}
+                        size={30}
+                        color={colors.sand[300]}
+                      />
                     )}
                     {idx < 3 && (
                       <View style={styles.popularRank}>
@@ -356,7 +374,7 @@ export function HomeScreen({ navigation }: Props) {
           <ActivityIndicator color={colors.brand[500]} style={{ marginTop: 24 }} />
         ) : suppliers.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>🌱</Text>
+            <Ionicons name="leaf-outline" size={52} color={colors.brand[300]} style={styles.emptyEmoji} />
             <Text style={styles.emptyTitle}>Ainda não temos parceiros ativos aqui</Text>
             <Text style={styles.emptySubtitle}>
               Os fornecedores estão sendo validados pela equipe Da Terra. Em breve vão aparecer
@@ -371,9 +389,14 @@ export function HomeScreen({ navigation }: Props) {
               <View key={section.type} style={styles.sectionBlock}>
                 <View style={styles.sectionHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.subsectionTitle}>
-                      {section.emoji} {section.title}
-                    </Text>
+                    <View style={styles.iconTitleRow}>
+                      <Ionicons
+                        name={supplierTypeIcon(section.type)}
+                        size={17}
+                        color={colors.brand[600]}
+                      />
+                      <Text style={styles.subsectionTitle}>{section.title}</Text>
+                    </View>
                     <Text style={styles.subsectionSubtitle}>{section.subtitle}</Text>
                   </View>
                   <Text style={styles.sectionCount}>{list.length}</Text>
@@ -391,24 +414,32 @@ export function HomeScreen({ navigation }: Props) {
                         {item.cover_url ? (
                           <Image source={{ uri: item.cover_url }} style={styles.rowImageInner} />
                         ) : (
-                          <Text style={styles.rowImagePlaceholder}>{section.emoji}</Text>
+                          <Ionicons
+                            name={supplierTypeIcon(section.type)}
+                            size={26}
+                            color={colors.sand[300]}
+                          />
                         )}
                       </View>
                       <View style={styles.rowBody}>
                         <View style={styles.seloPill}>
-                          <Text style={styles.seloPillText}>🏅 Feito Potiguar</Text>
+                          <Ionicons name="ribbon" size={11} color={colors.gold[500]} />
+                          <Text style={styles.seloPillText}>Feito Potiguar</Text>
                         </View>
                         <Text style={styles.rowName} numberOfLines={1}>
                           {item.name}
                         </Text>
-                        <Text style={styles.rowMeta} numberOfLines={1}>
-                          📍 {item.city ?? '—'}
-                          {item.primary_category
-                            ? ` · ${labelForCategory(item.primary_category)}`
-                            : ''}
-                        </Text>
+                        <View style={styles.rowMetaRow}>
+                          <Ionicons name="location-outline" size={12} color={colors.ink.secondary} />
+                          <Text style={styles.rowMeta} numberOfLines={1}>
+                            {item.city ?? '—'}
+                            {item.primary_category
+                              ? ` · ${labelForCategory(item.primary_category)}`
+                              : ''}
+                          </Text>
+                        </View>
                       </View>
-                      <Text style={styles.rowChevron}>›</Text>
+                      <Ionicons name="chevron-forward" size={20} color={colors.ink.tertiary} />
                     </Pressable>
                   ))}
                 </View>
@@ -429,20 +460,11 @@ function labelForCategory(slug: string | null): string {
   return found?.label ?? '';
 }
 
-function emojiForType(type: DBSupplier['type']): string {
-  switch (type) {
-    case 'producer':
-      return '🌾';
-    case 'restaurant':
-      return '🍴';
-    case 'hospitality':
-      return '🏨';
-    default:
-      return '🌱';
-  }
-}
-
 const styles = StyleSheet.create({
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  iconTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rowMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   root: { flex: 1, backgroundColor: colors.sand[50] },
   scroll: { paddingBottom: 24 },
   header: { paddingHorizontal: 20, paddingTop: 12, marginBottom: 16 },
@@ -733,6 +755,9 @@ const styles = StyleSheet.create({
   rowImagePlaceholder: { fontSize: 28 },
   rowBody: { flex: 1 },
   seloPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     alignSelf: 'flex-start',
     backgroundColor: colors.gold[100],
     paddingVertical: 2,

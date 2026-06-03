@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
@@ -125,19 +125,20 @@ export function StoreScreen({ route, navigation }: Props) {
                   resizeMode="contain"
                 />
               ) : (
-                <Text style={styles.coverPlaceholder}>🌱</Text>
+                <Ionicons name="storefront-outline" size={56} color={colors.sand[300]} />
               )}
               <Pressable
                 style={[styles.backFab, { top: insets.top + 8 }]}
                 onPress={() => navigation.goBack()}
                 hitSlop={8}
               >
-                <Text style={styles.backFabIcon}>←</Text>
+                <Ionicons name="chevron-back" size={22} color={colors.ink.primary} />
               </Pressable>
             </View>
             <View style={styles.summary}>
-              <View style={styles.seloBadgeStandalone}>
-                <Text style={styles.seloBadgeText}>🏅 Selo Feito Potiguar</Text>
+              <View style={[styles.seloBadgeStandalone, styles.seloBadgeRow]}>
+                <Ionicons name="ribbon" size={13} color={colors.gold[500]} />
+                <Text style={styles.seloBadgeText}>Selo Feito Potiguar</Text>
               </View>
               <Text style={styles.supplierName}>{supplier.name}</Text>
               <Text style={styles.supplierMeta}>
@@ -150,25 +151,25 @@ export function StoreScreen({ route, navigation }: Props) {
               <View style={styles.infoList}>
                 {categoryLabel && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoIcon}>🏭</Text>
+                    <Ionicons name="pricetag-outline" size={16} color={colors.ink.secondary} style={styles.infoIcon} />
                     <Text style={styles.infoText}>{categoryLabel}</Text>
                   </View>
                 )}
                 {fullAddress.length > 0 && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoIcon}>📍</Text>
+                    <Ionicons name="location-outline" size={16} color={colors.ink.secondary} style={styles.infoIcon} />
                     <Text style={styles.infoText}>{fullAddress}</Text>
                   </View>
                 )}
                 {supplier.city && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoIcon}>🗺️</Text>
+                    <Ionicons name="map-outline" size={16} color={colors.ink.secondary} style={styles.infoIcon} />
                     <Text style={styles.infoText}>{supplier.city}</Text>
                   </View>
                 )}
                 {phoneDisplay && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoIcon}>📞</Text>
+                    <Ionicons name="call-outline" size={16} color={colors.ink.secondary} style={styles.infoIcon} />
                     <Text style={styles.infoText}>{phoneDisplay}</Text>
                   </View>
                 )}
@@ -228,7 +229,7 @@ export function StoreScreen({ route, navigation }: Props) {
                 {photo ? (
                   <Image source={{ uri: photo }} style={styles.productImage} />
                 ) : (
-                  <Text style={styles.productImagePlaceholder}>🥫</Text>
+                  <Ionicons name="fast-food-outline" size={26} color={colors.sand[300]} />
                 )}
               </View>
             </Pressable>
@@ -236,7 +237,7 @@ export function StoreScreen({ route, navigation }: Props) {
         }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>🥫</Text>
+            <Ionicons name="fast-food-outline" size={44} color={colors.sand[300]} style={styles.emptyEmoji} />
             <Text style={styles.emptyText}>
               Esta loja ainda não tem produtos disponíveis. Volta em breve!
             </Text>
@@ -296,6 +297,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.sand[200],
   },
+  seloBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   seloBadgeStandalone: {
     alignSelf: 'flex-start',
     backgroundColor: colors.gold[100],
