@@ -29,7 +29,7 @@ import {
 } from '../lib/queries';
 import { CartBar } from '../components/CartBar';
 import { Bounded } from '../components/Bounded';
-import { CONTENT_MAX_WIDTH } from '../lib/responsive';
+import { CONTENT_MAX_WIDTH, useResponsive } from '../lib/responsive';
 import type { DBSupplier } from '../lib/supabase';
 import type {
   HomeStackParamList,
@@ -117,6 +117,7 @@ export function HomeScreen({ navigation }: Props) {
   }
 
   const { width } = useWindowDimensions();
+  const { isTablet } = useResponsive();
   // No iPad limita a largura do conteúdo (não estica); o banner acompanha.
   const bannerWidth = Math.min(width, CONTENT_MAX_WIDTH) - 32; // 16 de margin de cada lado
 
@@ -377,11 +378,11 @@ export function HomeScreen({ navigation }: Props) {
                   </View>
                   <Text style={styles.sectionCount}>{list.length}</Text>
                 </View>
-                <View style={styles.rowList}>
+                <View style={[styles.rowList, isTablet && styles.rowListTablet]}>
                   {list.map((item) => (
                     <Pressable
                       key={item.id}
-                      style={styles.row}
+                      style={[styles.row, isTablet && styles.rowTablet]}
                       onPress={() =>
                         navigation.navigate('Store', { supplierId: item.id })
                       }
@@ -704,6 +705,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.sand[200],
     gap: 12,
+  },
+  // iPad: a lista vira grade de 2 colunas (cards) pra aproveitar a largura.
+  rowListTablet: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    backgroundColor: 'transparent',
+    overflow: 'visible',
+    gap: 12,
+  },
+  rowTablet: {
+    width: '48%',
+    backgroundColor: colors.surface.primary,
+    borderRadius: 14,
+    borderBottomWidth: 0,
   },
   rowImage: {
     width: 64,
