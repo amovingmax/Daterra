@@ -546,11 +546,12 @@ const styles = StyleSheet.create({
 
   categories: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     paddingHorizontal: 16,
     marginBottom: 24,
-    justifyContent: 'space-between',
+    rowGap: 18,
   },
-  categoryItem: { flex: 1, alignItems: 'center' },
+  categoryItem: { width: '50%', alignItems: 'center' },
   categoryIconBox: {
     width: 72,
     height: 72,
