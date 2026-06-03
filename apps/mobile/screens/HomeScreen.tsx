@@ -15,6 +15,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -53,10 +54,9 @@ interface BannerSlide {
   title: string;
   subtitle: string;
   icon: IoniconName;
-  gradient: [string, string];
-  fg: string; // cor do texto/ícone
+  video: string; // loop de fundo (Mixkit, licença livre comercial, sem marca d'água)
+  fg: string; // cor do texto/ícone (sobre o escurecimento)
   sub: string; // cor do subtítulo
-  blob: string; // círculos decorativos (translúcidos)
 }
 
 const BANNER_SLIDES: BannerSlide[] = [
@@ -64,30 +64,30 @@ const BANNER_SLIDES: BannerSlide[] = [
     title: 'Direto da terra potiguar',
     subtitle: 'Produtos artesanais com Selo Feito Potiguar — entrega em todo RN.',
     icon: 'leaf',
-    gradient: ['#4F8862', '#1C3D28'],
+    video: 'https://assets.mixkit.co/videos/985/985-360.mp4',
     fg: colors.ink.inverse,
-    sub: 'rgba(251,248,241,0.82)',
-    blob: 'rgba(255,255,255,0.10)',
+    sub: 'rgba(251,248,241,0.88)',
   },
   {
     title: 'Selo Feito Potiguar',
     subtitle: 'Curadoria oficial: SEBRAE/RN, FAERN, FIERN e FECOMÉRCIO validam cada loja.',
     icon: 'ribbon',
-    gradient: ['#E8A33D', '#9D6C1E'],
-    fg: colors.ink.primary,
-    sub: 'rgba(42,42,42,0.72)',
-    blob: 'rgba(255,255,255,0.18)',
+    video: 'https://assets.mixkit.co/videos/46488/46488-360.mp4',
+    fg: colors.ink.inverse,
+    sub: 'rgba(251,248,241,0.88)',
   },
   {
     title: 'Comprou, chegou.',
     subtitle: 'Entrega na Grande Natal e RN inteiro · pagamento por Pix sem taxa.',
     icon: 'bicycle',
-    gradient: ['#C75D3F', '#7E3925'],
+    video: 'https://assets.mixkit.co/videos/13090/13090-360.mp4',
     fg: colors.ink.inverse,
-    sub: 'rgba(251,248,241,0.82)',
-    blob: 'rgba(255,255,255,0.12)',
+    sub: 'rgba(251,248,241,0.88)',
   },
 ];
+
+// Escurecimento (scrim) por cima do vídeo pra manter o texto branco legível.
+const BANNER_SCRIM: [string, string] = ['rgba(18,28,18,0.28)', 'rgba(12,18,12,0.80)'];
 
 const SLIDE_MS = 4500; // tempo de cada slide antes de avançar sozinho
 
@@ -144,6 +144,17 @@ export function HomeScreen({ navigation }: Props) {
   const contentAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const floatAnim = useRef(new Animated.Value(0)).current;
+
+  // Um player de vídeo por slide (loop, mudo, autoplay) — fundo animado do banner.
+  const initPlayer = (p: { loop: boolean; muted: boolean; play: () => void }) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  };
+  const player0 = useVideoPlayer(BANNER_SLIDES[0].video, initPlayer);
+  const player1 = useVideoPlayer(BANNER_SLIDES[1].video, initPlayer);
+  const player2 = useVideoPlayer(BANNER_SLIDES[2].video, initPlayer);
+  const bannerPlayers = [player0, player1, player2];
 
   async function load() {
     const promises: [Promise<DBSupplier[]>, Promise<DBSupplier[]>, Promise<number>] = [
@@ -367,21 +378,25 @@ export function HomeScreen({ navigation }: Props) {
                 : undefined;
               return (
                 <View key={i} style={[styles.bannerSlide, { width: bannerWidth }]}>
+                  <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                    <VideoView
+                      player={bannerPlayers[i]}
+                      style={StyleSheet.absoluteFill}
+                      contentFit="cover"
+                      nativeControls={false}
+                    />
+                  </View>
                   <LinearGradient
-                    colors={slide.gradient}
+                    colors={BANNER_SCRIM}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    end={{ x: 0, y: 1 }}
                     style={StyleSheet.absoluteFill}
-                  />
-                  <View style={[styles.blob, styles.blobTop, { backgroundColor: slide.blob }]} />
-                  <View
-                    style={[styles.blob, styles.blobBottom, { backgroundColor: slide.blob }]}
                   />
                   <Animated.View style={entrance}>
                     <Animated.View
                       style={[
                         styles.bannerIconWrap,
-                        { backgroundColor: slide.blob, transform: [{ translateY: bannerFloatY }] },
+                        { transform: [{ translateY: bannerFloatY }] },
                       ]}
                     >
                       <Ionicons name={slide.icon} size={28} color={slide.fg} />
@@ -703,9 +718,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
   },
-  blob: { position: 'absolute', borderRadius: 999 },
-  blobTop: { width: 170, height: 170, top: -56, right: -36 },
-  blobBottom: { width: 120, height: 120, bottom: -40, left: -24 },
   bannerIconWrap: {
     width: 52,
     height: 52,
@@ -713,6 +725,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.30)',
   },
   bannerTitle: {
     fontSize: 26,
