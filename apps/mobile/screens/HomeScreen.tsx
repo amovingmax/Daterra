@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Image,
   Pressable,
   RefreshControl,
@@ -12,6 +14,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -50,9 +53,10 @@ interface BannerSlide {
   title: string;
   subtitle: string;
   icon: IoniconName;
-  bg: string;
-  fg: string;
-  accent: string;
+  gradient: [string, string];
+  fg: string; // cor do texto/ícone
+  sub: string; // cor do subtítulo
+  blob: string; // círculos decorativos (translúcidos)
 }
 
 const BANNER_SLIDES: BannerSlide[] = [
@@ -60,27 +64,32 @@ const BANNER_SLIDES: BannerSlide[] = [
     title: 'Direto da terra potiguar',
     subtitle: 'Produtos artesanais com Selo Feito Potiguar — entrega em todo RN.',
     icon: 'leaf',
-    bg: colors.brand[500],
+    gradient: ['#4F8862', '#1C3D28'],
     fg: colors.ink.inverse,
-    accent: colors.brand[100],
+    sub: 'rgba(251,248,241,0.82)',
+    blob: 'rgba(255,255,255,0.10)',
   },
   {
     title: 'Selo Feito Potiguar',
     subtitle: 'Curadoria oficial: SEBRAE/RN, FAERN, FIERN e FECOMÉRCIO validam cada loja.',
     icon: 'ribbon',
-    bg: colors.gold[300],
+    gradient: ['#E8A33D', '#9D6C1E'],
     fg: colors.ink.primary,
-    accent: colors.gold[500],
+    sub: 'rgba(42,42,42,0.72)',
+    blob: 'rgba(255,255,255,0.18)',
   },
   {
     title: 'Comprou, chegou.',
     subtitle: 'Entrega na Grande Natal e RN inteiro · pagamento por Pix sem taxa.',
     icon: 'bicycle',
-    bg: colors.accent[400],
+    gradient: ['#C75D3F', '#7E3925'],
     fg: colors.ink.inverse,
-    accent: colors.accent[100],
+    sub: 'rgba(251,248,241,0.82)',
+    blob: 'rgba(255,255,255,0.12)',
   },
 ];
+
+const SLIDE_MS = 4500; // tempo de cada slide antes de avançar sozinho
 
 interface Section {
   title: string;
@@ -131,6 +140,10 @@ export function HomeScreen({ navigation }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [bannerIndex, setBannerIndex] = useState(0);
   const bannerRef = useRef<ScrollView>(null);
+  // Animações do banner: entrada do conteúdo, barra de progresso e flutuação do ícone.
+  const contentAnim = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
 
   async function load() {
     const promises: [Promise<DBSupplier[]>, Promise<DBSupplier[]>, Promise<number>] = [
@@ -176,22 +189,66 @@ export function HomeScreen({ navigation }: Props) {
     load();
   }
 
-  // Auto-rotate dos banners a cada 5s (PRD §8.11)
+  // Flutuação contínua do ícone (sobe/desce de leve), roda enquanto a tela vive.
   useEffect(() => {
-    const id = setInterval(() => {
-      setBannerIndex((prev) => {
-        const next = (prev + 1) % BANNER_SLIDES.length;
-        bannerRef.current?.scrollTo({ x: next * bannerWidth, animated: true });
-        return next;
-      });
-    }, 5000);
-    return () => clearInterval(id);
-  }, [bannerWidth]);
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 1900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 1900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [floatAnim]);
+
+  // A cada troca de slide: anima a entrada do conteúdo (fade + sobe) e enche a
+  // barrinha de progresso; quando ela completa, avança sozinho pro próximo.
+  useEffect(() => {
+    contentAnim.setValue(0);
+    Animated.timing(contentAnim, {
+      toValue: 1,
+      duration: 480,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+
+    progressAnim.setValue(0);
+    const progress = Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: SLIDE_MS,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    });
+    progress.start(({ finished }) => {
+      if (!finished) return;
+      const next = (bannerIndex + 1) % BANNER_SLIDES.length;
+      bannerRef.current?.scrollTo({ x: next * bannerWidth, animated: true });
+      setBannerIndex(next);
+    });
+    return () => progress.stop();
+  }, [bannerIndex, bannerWidth, contentAnim, progressAnim]);
+
+  function goToBanner(i: number) {
+    bannerRef.current?.scrollTo({ x: i * bannerWidth, animated: true });
+    setBannerIndex(i);
+  }
 
   function handleBannerScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
     const idx = Math.round(e.nativeEvent.contentOffset.x / bannerWidth);
-    setBannerIndex(idx);
+    if (idx !== bannerIndex) setBannerIndex(idx);
   }
+
+  const bannerFloatY = floatAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -8] });
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
@@ -293,33 +350,70 @@ export function HomeScreen({ navigation }: Props) {
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={handleBannerScroll}
           >
-            {BANNER_SLIDES.map((slide, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.bannerSlide,
-                  { width: bannerWidth, backgroundColor: slide.bg },
-                ]}
-              >
-                <Ionicons
-                  name={slide.icon}
-                  size={42}
-                  color={slide.fg}
-                  style={styles.bannerEmoji}
-                />
-                <Text style={[styles.bannerTitle, { color: slide.fg }]}>{slide.title}</Text>
-                <Text style={[styles.bannerSubtitle, { color: slide.accent }]}>
-                  {slide.subtitle}
-                </Text>
-              </View>
-            ))}
+            {BANNER_SLIDES.map((slide, i) => {
+              const active = i === bannerIndex;
+              const entrance = active
+                ? {
+                    opacity: contentAnim,
+                    transform: [
+                      {
+                        translateY: contentAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [16, 0],
+                        }),
+                      },
+                    ],
+                  }
+                : undefined;
+              return (
+                <View key={i} style={[styles.bannerSlide, { width: bannerWidth }]}>
+                  <LinearGradient
+                    colors={slide.gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={[styles.blob, styles.blobTop, { backgroundColor: slide.blob }]} />
+                  <View
+                    style={[styles.blob, styles.blobBottom, { backgroundColor: slide.blob }]}
+                  />
+                  <Animated.View style={entrance}>
+                    <Animated.View
+                      style={[
+                        styles.bannerIconWrap,
+                        { backgroundColor: slide.blob, transform: [{ translateY: bannerFloatY }] },
+                      ]}
+                    >
+                      <Ionicons name={slide.icon} size={28} color={slide.fg} />
+                    </Animated.View>
+                    <Text style={[styles.bannerTitle, { color: slide.fg }]}>{slide.title}</Text>
+                    <Text style={[styles.bannerSubtitle, { color: slide.sub }]}>
+                      {slide.subtitle}
+                    </Text>
+                  </Animated.View>
+                </View>
+              );
+            })}
           </ScrollView>
           <View style={styles.dots}>
             {BANNER_SLIDES.map((_, i) => (
-              <View
-                key={i}
-                style={[styles.dot, i === bannerIndex && styles.dotActive]}
-              />
+              <Pressable key={i} onPress={() => goToBanner(i)} hitSlop={8}>
+                <View style={[styles.dotTrack, i === bannerIndex && styles.dotTrackActive]}>
+                  {i === bannerIndex && (
+                    <Animated.View
+                      style={[
+                        styles.dotFill,
+                        {
+                          width: progressAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0%', '100%'],
+                          }),
+                        },
+                      ]}
+                    />
+                  )}
+                </View>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -607,10 +701,18 @@ const styles = StyleSheet.create({
     paddingVertical: 28,
     justifyContent: 'center',
     borderRadius: 24,
+    overflow: 'hidden',
   },
-  bannerEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
+  blob: { position: 'absolute', borderRadius: 999 },
+  blobTop: { width: 170, height: 170, top: -56, right: -36 },
+  blobBottom: { width: 120, height: 120, bottom: -40, left: -24 },
+  bannerIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
   },
   bannerTitle: {
     fontSize: 26,
@@ -626,18 +728,25 @@ const styles = StyleSheet.create({
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: 6,
     marginTop: 12,
     marginBottom: 16,
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  dotTrack: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
     backgroundColor: colors.sand[300],
+    overflow: 'hidden',
   },
-  dotActive: {
-    width: 18,
+  dotTrackActive: {
+    width: 26,
+    backgroundColor: colors.sand[200],
+  },
+  dotFill: {
+    height: '100%',
+    borderRadius: 4,
     backgroundColor: colors.brand[500],
   },
 
