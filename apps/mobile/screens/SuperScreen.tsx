@@ -14,6 +14,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { listActivePromotions, type PromotionItem } from '../lib/queries';
 import type { MainTabParamList } from '../navigation/types';
@@ -45,7 +46,7 @@ export function SuperScreen() {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Text style={styles.lightning}>⚡</Text>
+          <Ionicons name="flash" size={30} color={colors.gold[500]} style={styles.lightning} />
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>Super Da Terra</Text>
             <Text style={styles.subtitle}>
@@ -81,7 +82,7 @@ export function SuperScreen() {
                   {photo ? (
                     <Image source={{ uri: photo }} style={styles.cardImageInner} />
                   ) : (
-                    <Text style={styles.cardImagePlaceholder}>🥫</Text>
+                    <Ionicons name="fast-food-outline" size={32} color={colors.sand[300]} />
                   )}
                   {discount > 0 && (
                     <View style={styles.discountBadge}>
@@ -101,13 +102,16 @@ export function SuperScreen() {
                     <Text style={styles.priceNew}>{formatBRL(promo)}</Text>
                   </View>
                   {endsAt && (
-                    <Text style={styles.endsAt}>
-                      ⏱ Termina em{' '}
-                      {endsAt.toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'short',
-                      })}
-                    </Text>
+                    <View style={styles.endsAtRow}>
+                      <Ionicons name="time-outline" size={12} color={colors.accent[500]} />
+                      <Text style={styles.endsAt}>
+                        Termina em{' '}
+                        {endsAt.toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'short',
+                        })}
+                      </Text>
+                    </View>
                   )}
                 </View>
               </Pressable>
@@ -115,7 +119,7 @@ export function SuperScreen() {
           }}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>⚡</Text>
+              <Ionicons name="flash-outline" size={52} color={colors.sand[300]} style={styles.emptyEmoji} />
               <Text style={styles.emptyTitle}>Nenhuma promoção rolando agora</Text>
               <Text style={styles.emptyText}>
                 Volta em breve! Novas ofertas e combos relâmpago dos fornecedores potiguares
@@ -225,8 +229,8 @@ const styles = StyleSheet.create({
   endsAt: {
     fontSize: 11,
     color: colors.accent[500],
-    marginTop: 4,
   },
+  endsAtRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
   empty: {
     paddingVertical: 80,
     paddingHorizontal: 40,

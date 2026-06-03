@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL, type OrderStatus } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { Bounded } from '../components/Bounded';
 import { supabase, type DBOrder, type DBOrderItem } from '../lib/supabase';
 import type { OrdersStackParamList } from '../navigation/types';
@@ -77,8 +78,13 @@ export function OrderDetailScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Bounded>
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={6}>
-            <Text style={styles.back}>← Voltar</Text>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            hitSlop={6}
+            style={{ flexDirection: 'row', alignItems: 'center' }}
+          >
+            <Ionicons name="chevron-back" size={18} color={colors.ink.secondary} />
+            <Text style={styles.back}>Voltar</Text>
           </Pressable>
           <Text style={styles.number}>{order.number}</Text>
           <Text style={styles.statusBig}>{STATUS_LABEL[order.status]}</Text>
@@ -95,7 +101,9 @@ export function OrderDetailScreen({ route, navigation }: Props) {
                     idx === currentIndex && styles.timelineDotCurrent,
                   ]}
                 >
-                  {idx <= currentIndex && <Text style={styles.timelineCheck}>✓</Text>}
+                  {idx <= currentIndex && (
+                    <Ionicons name="checkmark" size={12} color={colors.ink.inverse} />
+                  )}
                 </View>
                 <Text
                   style={[

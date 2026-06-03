@@ -16,6 +16,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { Bounded } from '../components/Bounded';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
@@ -116,14 +117,14 @@ export function ProductDetailScreen({ route, navigation }: Props) {
           {photo ? (
             <Image source={{ uri: photo }} style={styles.galleryImage} />
           ) : (
-            <Text style={styles.galleryPlaceholder}>🥫</Text>
+            <Ionicons name="fast-food-outline" size={64} color={colors.sand[300]} />
           )}
           <Pressable
             style={[styles.backFab, { top: insets.top + 8 }]}
             onPress={() => navigation.goBack()}
             hitSlop={8}
           >
-            <Text style={styles.backFabIcon}>←</Text>
+            <Ionicons name="chevron-back" size={22} color={colors.ink.primary} />
           </Pressable>
         </View>
 
@@ -133,7 +134,8 @@ export function ProductDetailScreen({ route, navigation }: Props) {
             style={styles.supplierLink}
             onPress={() => navigation.navigate('Store', { supplierId: supplier.id })}
           >
-            <Text style={styles.supplierLinkText}>de {supplier.name} →</Text>
+            <Text style={styles.supplierLinkText}>de {supplier.name}</Text>
+            <Ionicons name="chevron-forward" size={14} color={colors.brand[600]} />
           </Pressable>
 
           <View style={styles.priceRow}>
@@ -245,7 +247,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
     color: colors.ink.primary,
   },
-  supplierLink: { marginTop: 6 },
+  supplierLink: { marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 2 },
   supplierLinkText: { color: colors.brand[500], fontSize: 14 },
   priceRow: {
     flexDirection: 'row',

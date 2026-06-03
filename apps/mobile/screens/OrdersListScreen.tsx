@@ -16,6 +16,7 @@ import type {
 } from '@react-navigation/native-stack';
 import { formatBRL, type OrderStatus } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
 import { useAuth } from '../lib/auth-context';
@@ -78,7 +79,7 @@ export function OrdersListScreen({ navigation }: Props) {
           <Text style={styles.title}>Seus pedidos</Text>
         </View>
         <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>📦</Text>
+          <Ionicons name="receipt-outline" size={48} color={colors.sand[300]} style={styles.emptyEmoji} />
           <Text style={styles.emptyTitle}>Entre para ver seus pedidos</Text>
           <Text style={styles.emptySubtitle}>
             Faça login ou crie uma conta para acompanhar seus pedidos e entregas.
@@ -134,7 +135,7 @@ export function OrdersListScreen({ navigation }: Props) {
         ListEmptyComponent={
           !loading ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyEmoji}>📦</Text>
+              <Ionicons name="receipt-outline" size={48} color={colors.sand[300]} style={styles.emptyEmoji} />
               <Text style={styles.emptyTitle}>Você ainda não fez nenhum pedido</Text>
               <Text style={styles.emptySubtitle}>
                 Que tal começar pela aba Início e descobrir produtos potiguares?

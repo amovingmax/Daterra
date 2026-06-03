@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Ionicons } from '@expo/vector-icons';
 import { Bounded } from '../components/Bounded';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
@@ -117,8 +118,13 @@ export function CheckoutScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Bounded>
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-            <Text style={styles.back}>← Voltar</Text>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            hitSlop={8}
+            style={{ flexDirection: 'row', alignItems: 'center' }}
+          >
+            <Ionicons name="chevron-back" size={18} color={colors.ink.secondary} />
+            <Text style={styles.back}>Voltar</Text>
           </Pressable>
           <Text style={styles.title}>Finalizar pedido</Text>
         </View>
@@ -168,13 +174,13 @@ export function CheckoutScreen({ navigation }: Props) {
           <Option
             selected={paymentMethod === 'pix'}
             onPress={() => setPaymentMethod('pix')}
-            label="🟢 Pix"
+            label="Pix"
             sub="Sem taxa · simulado no MVP"
           />
           <Option
             selected={paymentMethod === 'credit_card'}
             onPress={() => setPaymentMethod('credit_card')}
-            label="💳 Cartão de crédito"
+            label="Cartão de crédito"
             sub="Em breve"
             disabled
           />
