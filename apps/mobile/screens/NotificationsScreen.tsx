@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { useAuth } from '../lib/auth-context';
 import {
   listNotifications,
@@ -173,7 +174,10 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
     color: colors.brand[700],
   },
-  listContent: { paddingHorizontal: 16, paddingBottom: 24 },
+  listContent: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center', paddingHorizontal: 16, paddingBottom: 24 },
   item: {
     flexDirection: 'row',
     backgroundColor: colors.surface.primary,

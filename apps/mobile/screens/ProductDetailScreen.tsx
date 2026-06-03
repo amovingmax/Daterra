@@ -16,6 +16,8 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Bounded } from '../components/Bounded';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
 import { useCart } from '../lib/cart-context';
 import { getProduct, getSupplier } from '../lib/queries';
@@ -109,6 +111,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.root} edges={['left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        <Bounded>
         <View style={styles.gallery}>
           {photo ? (
             <Image source={{ uri: photo }} style={styles.galleryImage} />
@@ -173,6 +176,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
             />
           </View>
         </View>
+      </Bounded>
       </ScrollView>
 
       <View style={styles.bottomBar}>
@@ -281,6 +285,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
   },
   bottomBar: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center',
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingBottom: 28,

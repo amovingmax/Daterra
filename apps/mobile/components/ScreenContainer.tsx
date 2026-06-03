@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type ReactNode } from 'react';
 import { colors } from '@daterra/ui/tokens';
+import { FORM_MAX_WIDTH } from '../lib/responsive';
 
 interface ScreenContainerProps {
   children: ReactNode;
@@ -21,16 +22,19 @@ export function ScreenContainer({
   scroll = true,
   contentStyle,
 }: ScreenContainerProps) {
+  // No iPad o conteúdo é limitado e centralizado (não estica a tela toda).
+  const content = <View style={[styles.content, contentStyle]}>{children}</View>;
+
   const inner = scroll ? (
     <ScrollView
-      contentContainerStyle={[styles.content, contentStyle]}
+      contentContainerStyle={styles.scroll}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {children}
+      {content}
     </ScrollView>
   ) : (
-    <View style={[styles.content, contentStyle]}>{children}</View>
+    <View style={styles.fill}>{content}</View>
   );
 
   return (
@@ -53,7 +57,16 @@ const styles = StyleSheet.create({
   kav: {
     flex: 1,
   },
+  scroll: {
+    flexGrow: 1,
+  },
+  fill: {
+    flex: 1,
+  },
   content: {
+    width: '100%',
+    maxWidth: FORM_MAX_WIDTH,
+    alignSelf: 'center',
     paddingHorizontal: 20,
     paddingVertical: 24,
     flexGrow: 1,

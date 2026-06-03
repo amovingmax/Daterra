@@ -16,6 +16,8 @@ import type {
 } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Bounded } from '../components/Bounded';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
 import { useAuth } from '../lib/auth-context';
 import { useCart } from '../lib/cart-context';
@@ -62,6 +64,7 @@ export function CartScreen({ navigation }: Props) {
       ) : (
         <>
           <ScrollView contentContainerStyle={styles.scroll}>
+        <Bounded>
             <View style={styles.header}>
               <Text style={styles.title}>Sua sacola</Text>
               <Text style={styles.supplier}>de {cart.supplier_name}</Text>
@@ -138,7 +141,8 @@ export function CartScreen({ navigation }: Props) {
             <Pressable onPress={handleClear} style={styles.clearLink} hitSlop={6}>
               <Text style={styles.clearLinkText}>Esvaziar sacola</Text>
             </Pressable>
-          </ScrollView>
+          </Bounded>
+      </ScrollView>
 
           <View style={styles.bottomBar}>
             <Button
@@ -296,6 +300,9 @@ const styles = StyleSheet.create({
   clearLink: { alignItems: 'center', paddingVertical: 16 },
   clearLinkText: { color: colors.status.danger, fontSize: 14 },
   bottomBar: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center',
     paddingHorizontal: 20,
     paddingBottom: 28,
     paddingTop: 12,

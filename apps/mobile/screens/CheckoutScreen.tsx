@@ -13,6 +13,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Bounded } from '../components/Bounded';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
 import { useAuth } from '../lib/auth-context';
 import { useCart } from '../lib/cart-context';
@@ -113,6 +115,7 @@ export function CheckoutScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        <Bounded>
         <View style={styles.header}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
             <Text style={styles.back}>← Voltar</Text>
@@ -182,6 +185,7 @@ export function CheckoutScreen({ navigation }: Props) {
           <SummaryRow label="Entrega" value={formatBRL(deliveryCents)} />
           <SummaryRow label="Total" value={formatBRL(totalCents)} bold />
         </Section>
+      </Bounded>
       </ScrollView>
 
       <View style={styles.bottomBar}>
@@ -337,6 +341,9 @@ const styles = StyleSheet.create({
     color: colors.ink.primary,
   },
   bottomBar: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center',
     paddingHorizontal: 20,
     paddingBottom: 28,
     paddingTop: 12,

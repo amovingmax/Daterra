@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL, type OrderStatus } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Bounded } from '../components/Bounded';
 import { supabase, type DBOrder, type DBOrderItem } from '../lib/supabase';
 import type { OrdersStackParamList } from '../navigation/types';
 
@@ -74,6 +75,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        <Bounded>
         <View style={styles.header}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={6}>
             <Text style={styles.back}>← Voltar</Text>
@@ -132,6 +134,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
           <View style={styles.totalDivider} />
           <SummaryRow label="Total" value={formatBRL(order.total_cents)} bold />
         </View>
+      </Bounded>
       </ScrollView>
     </SafeAreaView>
   );

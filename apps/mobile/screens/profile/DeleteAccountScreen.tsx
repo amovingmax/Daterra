@@ -3,6 +3,8 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Bounded } from '../../components/Bounded';
+import { CONTENT_MAX_WIDTH } from '../../lib/responsive';
 import { Button } from '../../components/Button';
 import { deleteAccount } from '../../lib/account';
 import type { ProfileStackParamList } from '../../navigation/types';
@@ -50,6 +52,7 @@ export function DeleteAccountScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        <Bounded>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
           <Text style={styles.back}>← Voltar</Text>
         </Pressable>
@@ -94,6 +97,7 @@ export function DeleteAccountScreen({ navigation }: Props) {
             Entendo que a exclusão é permanente e autorizo a remoção dos meus dados.
           </Text>
         </Pressable>
+      </Bounded>
       </ScrollView>
 
       <View style={styles.bottomBar}>
@@ -161,6 +165,9 @@ const styles = StyleSheet.create({
   checkboxTick: { color: colors.ink.inverse, fontSize: 14, fontWeight: typography.fontWeight.bold },
   agreeText: { flex: 1, fontSize: 14, color: colors.ink.primary, lineHeight: 20 },
   bottomBar: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center',
     paddingHorizontal: 20,
     paddingBottom: 28,
     paddingTop: 12,

@@ -14,6 +14,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { listActivePromotions, type PromotionItem } from '../lib/queries';
 import type { MainTabParamList } from '../navigation/types';
 
@@ -159,7 +160,10 @@ const styles = StyleSheet.create({
     color: colors.ink.secondary,
     marginTop: 2,
   },
-  listContent: { paddingHorizontal: 16, paddingBottom: 24 },
+  listContent: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center', paddingHorizontal: 16, paddingBottom: 24 },
   card: {
     flexDirection: 'row',
     backgroundColor: colors.surface.primary,

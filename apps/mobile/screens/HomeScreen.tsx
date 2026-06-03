@@ -28,6 +28,8 @@ import {
   unreadNotificationsCount,
 } from '../lib/queries';
 import { CartBar } from '../components/CartBar';
+import { Bounded } from '../components/Bounded';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import type { DBSupplier } from '../lib/supabase';
 import type {
   HomeStackParamList,
@@ -115,7 +117,8 @@ export function HomeScreen({ navigation }: Props) {
   }
 
   const { width } = useWindowDimensions();
-  const bannerWidth = width - 32; // 16 de margin de cada lado
+  // No iPad limita a largura do conteúdo (não estica); o banner acompanha.
+  const bannerWidth = Math.min(width, CONTENT_MAX_WIDTH) - 32; // 16 de margin de cada lado
 
   const [suppliers, setSuppliers] = useState<DBSupplier[]>([]);
   const [popular, setPopular] = useState<DBSupplier[]>([]);
@@ -192,6 +195,7 @@ export function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        <Bounded maxWidth={CONTENT_MAX_WIDTH}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <Text style={styles.brand}>🌱 Da Terra</Text>
@@ -411,6 +415,7 @@ export function HomeScreen({ navigation }: Props) {
             );
           })
         )}
+        </Bounded>
       </ScrollView>
       <CartBar onPress={() => navigation.navigate('Cart')} />
     </SafeAreaView>

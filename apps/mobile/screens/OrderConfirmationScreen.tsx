@@ -6,6 +6,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
 import { supabase, type DBOrder } from '../lib/supabase';
 import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
@@ -89,7 +90,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
+  content: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center', flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
   checkmark: { fontSize: 80, marginBottom: 16 },
   title: {
     fontSize: 26,
@@ -132,5 +136,8 @@ const styles = StyleSheet.create({
     color: colors.ink.primary,
     marginTop: 4,
   },
-  bottomBar: { padding: 20, paddingBottom: 32 },
+  bottomBar: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center', padding: 20, paddingBottom: 32 },
 });

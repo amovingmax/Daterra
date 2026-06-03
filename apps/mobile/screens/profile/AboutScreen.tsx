@@ -2,6 +2,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Bounded } from '../../components/Bounded';
 import type { ProfileStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'About'>;
@@ -10,6 +11,7 @@ export function AboutScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        <Bounded>
         <Pressable onPress={() => navigation.goBack()} hitSlop={8}>
           <Text style={styles.back}>← Voltar</Text>
         </Pressable>
@@ -47,6 +49,7 @@ export function AboutScreen({ navigation }: Props) {
         </Pressable>
 
         <Text style={styles.footer}>MVP v0.0.1 · Abril 2026</Text>
+      </Bounded>
       </ScrollView>
     </SafeAreaView>
   );

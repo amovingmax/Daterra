@@ -15,6 +15,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES, formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -575,7 +576,10 @@ const styles = StyleSheet.create({
   recentClock: { fontSize: 14 },
   recentText: { flex: 1, fontSize: 15, color: colors.ink.primary },
   recentClose: { fontSize: 16, color: colors.ink.tertiary, padding: 4 },
-  resultsList: { paddingHorizontal: 16, paddingBottom: 24 },
+  resultsList: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center', paddingHorizontal: 16, paddingBottom: 24 },
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -6,6 +6,7 @@ import type {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Bounded } from '../../components/Bounded';
 import { Button } from '../../components/Button';
 import { useAuth } from '../../lib/auth-context';
 import type { ProfileStackParamList, RootStackParamList } from '../../navigation/types';
@@ -115,6 +116,7 @@ export function ProfileScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        <Bounded>
         <View style={styles.header}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{isGuest ? '🌱' : initials || '🌱'}</Text>
@@ -172,6 +174,7 @@ export function ProfileScreen({ navigation }: Props) {
         ))}
 
         <Text style={styles.version}>Da Terra · MVP</Text>
+      </Bounded>
       </ScrollView>
     </SafeAreaView>
   );

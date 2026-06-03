@@ -5,6 +5,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FEITO_POTIGUAR_CATEGORIES } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { Bounded } from '../components/Bounded';
 import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'CategoriesModal'>;
@@ -31,6 +32,7 @@ export function CategoriesModalScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
+        <Bounded>
         <Text style={styles.subtitle}>
           As 8 categorias do programa Feito Potiguar.
         </Text>
@@ -50,6 +52,7 @@ export function CategoriesModalScreen({ navigation }: Props) {
             </Pressable>
           ))}
         </View>
+      </Bounded>
       </ScrollView>
     </SafeAreaView>
   );

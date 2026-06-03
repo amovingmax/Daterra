@@ -14,6 +14,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { getSupplier, listSupplierProducts } from '../lib/queries';
 import { CartBar } from '../components/CartBar';
 import type { DBProduct, DBSupplier } from '../lib/supabase';
@@ -256,7 +257,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  listContent: { paddingBottom: 40 },
+  listContent: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center', paddingBottom: 40 },
   cover: {
     height: 200,
     backgroundColor: colors.sand[100],

@@ -16,6 +16,7 @@ import type {
 } from '@react-navigation/native-stack';
 import { formatBRL, type OrderStatus } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
+import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
 import { useAuth } from '../lib/auth-context';
 import { listMyOrders } from '../lib/queries';
@@ -158,7 +159,10 @@ export function OrdersListScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.sand[50] },
-  listContent: { paddingBottom: 24 },
+  listContent: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center', paddingBottom: 24 },
   header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   title: {
     fontSize: 24,

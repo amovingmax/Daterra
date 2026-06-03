@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, typography } from '@daterra/ui/tokens';
+import { CONTENT_MAX_WIDTH } from '../../lib/responsive';
 import { Button } from '../../components/Button';
 import { useAuth } from '../../lib/auth-context';
 import { deleteAddress, listMyAddresses, setAddressAsPrimary } from '../../lib/queries';
@@ -151,7 +152,10 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.bold,
     color: colors.brand[700],
   },
-  listContent: { paddingHorizontal: 20, paddingBottom: 100 },
+  listContent: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 100 },
   card: {
     backgroundColor: colors.surface.primary,
     borderRadius: 14,
@@ -189,6 +193,9 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyText: { fontSize: 14, color: colors.ink.secondary, textAlign: 'center' },
   bottomBar: {
+    maxWidth: CONTENT_MAX_WIDTH,
+    width: '100%',
+    alignSelf: 'center',
     position: 'absolute',
     bottom: 0,
     left: 0,
