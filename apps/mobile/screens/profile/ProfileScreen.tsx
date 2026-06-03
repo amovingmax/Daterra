@@ -1,5 +1,6 @@
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type {
   NativeStackNavigationProp,
@@ -14,7 +15,7 @@ import type { ProfileStackParamList, RootStackParamList } from '../../navigation
 type Props = NativeStackScreenProps<ProfileStackParamList, 'Profile'>;
 
 interface MenuItem {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
   danger?: boolean;
@@ -45,7 +46,7 @@ export function ProfileScreen({ navigation }: Props) {
     title: 'Suporte',
     items: [
       {
-        icon: '🆘',
+        icon: 'chatbubble-ellipses-outline',
         label: 'Falar com a Da Terra',
         onPress: () => {
           const phone = '5584999999999'; // placeholder, troca pelo real
@@ -54,7 +55,11 @@ export function ProfileScreen({ navigation }: Props) {
           );
         },
       },
-      { icon: 'ℹ️', label: 'Sobre o Da Terra', onPress: () => navigation.navigate('About') },
+      {
+        icon: 'information-circle-outline',
+        label: 'Sobre o Da Terra',
+        onPress: () => navigation.navigate('About'),
+      },
     ],
   };
 
@@ -65,17 +70,17 @@ export function ProfileScreen({ navigation }: Props) {
         {
           items: [
             {
-              icon: '👤',
+              icon: 'person-outline',
               label: 'Dados pessoais',
               onPress: () => navigation.navigate('EditProfile'),
             },
             {
-              icon: '📍',
+              icon: 'location-outline',
               label: 'Endereços',
               onPress: () => navigation.navigate('Addresses'),
             },
             {
-              icon: '💳',
+              icon: 'card-outline',
               label: 'Métodos de pagamento',
               onPress: () =>
                 Alert.alert(
@@ -90,13 +95,13 @@ export function ProfileScreen({ navigation }: Props) {
           title: 'Atividade',
           items: [
             {
-              icon: '🎟️',
+              icon: 'pricetag-outline',
               label: 'Cupons',
               onPress: () => Alert.alert('Em breve', 'Programa de cupons na Fase 2.'),
               badge: 'Em breve',
             },
             {
-              icon: '🔔',
+              icon: 'notifications-outline',
               label: 'Notificações',
               onPress: () =>
                 Alert.alert(
@@ -109,7 +114,9 @@ export function ProfileScreen({ navigation }: Props) {
         },
         supportSection,
         {
-          items: [{ icon: '🚪', label: 'Sair', onPress: confirmSignOut, danger: true }],
+          items: [
+            { icon: 'log-out-outline', label: 'Sair', onPress: confirmSignOut, danger: true },
+          ],
         },
       ];
 
@@ -119,7 +126,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Bounded>
         <View style={styles.header}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{isGuest ? '🌱' : initials || '🌱'}</Text>
+            {isGuest || !initials ? (
+              <Ionicons name="leaf" size={28} color={colors.ink.inverse} />
+            ) : (
+              <Text style={styles.avatarText}>{initials}</Text>
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{isGuest ? 'Visitante' : fullName}</Text>
@@ -156,7 +167,12 @@ export function ProfileScreen({ navigation }: Props) {
                     i < section.items.length - 1 && styles.menuRowBorder,
                   ]}
                 >
-                  <Text style={styles.menuIcon}>{item.icon}</Text>
+                  <Ionicons
+                    name={item.icon}
+                    size={20}
+                    color={item.danger ? colors.status.danger : colors.ink.secondary}
+                    style={styles.menuIcon}
+                  />
                   <Text
                     style={[styles.menuLabel, item.danger && styles.menuLabelDanger]}
                   >
@@ -165,7 +181,7 @@ export function ProfileScreen({ navigation }: Props) {
                   {item.badge ? (
                     <Text style={styles.menuBadge}>{item.badge}</Text>
                   ) : item.danger ? null : (
-                    <Text style={styles.menuChevron}>›</Text>
+                    <Ionicons name="chevron-forward" size={18} color={colors.ink.tertiary} />
                   )}
                 </Pressable>
               ))}
