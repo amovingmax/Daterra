@@ -253,7 +253,7 @@ export function HomeScreen({ navigation }: Props) {
               onPress={() => openCategory(cat.slug)}
             >
               <View style={styles.categoryIconBox}>
-                <Ionicons name={categoryIcon(cat.slug)} size={32} color={colors.brand[600]} />
+                <Ionicons name={categoryIcon(cat.slug)} size={24} color={colors.brand[600]} />
               </View>
               <Text style={styles.categoryLabel} numberOfLines={2}>
                 {cat.label}
@@ -265,7 +265,7 @@ export function HomeScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('CategoriesModal')}
           >
             <View style={[styles.categoryIconBox, styles.categoryIconBoxMore]}>
-              <Ionicons name="grid-outline" size={28} color={colors.brand[600]} />
+              <Ionicons name="grid-outline" size={22} color={colors.brand[600]} />
             </View>
             <Text style={styles.categoryLabel} numberOfLines={2}>
               Ver mais
@@ -547,41 +547,45 @@ const styles = StyleSheet.create({
   categories: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     marginBottom: 24,
-    rowGap: 18,
+    rowGap: 12,
   },
-  categoryItem: { width: '50%', alignItems: 'center' },
-  categoryIconBox: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: colors.surface.primary,
+  categoryItem: {
+    width: '48%',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
+    gap: 10,
+    backgroundColor: colors.surface.primary,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  categoryIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.brand[50],
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryIconBoxMore: {
     backgroundColor: colors.brand[50],
     borderWidth: 1,
     borderColor: colors.brand[100],
   },
-  categoryIcon: { fontSize: 34 },
-  categoryIconMore: {
-    fontSize: 30,
-    color: colors.brand[600],
-    fontWeight: typography.fontWeight.semibold,
-  },
   categoryLabel: {
-    fontSize: 11,
-    textAlign: 'center',
+    flex: 1,
+    fontSize: 13,
     color: colors.ink.primary,
-    lineHeight: 14,
+    fontWeight: typography.fontWeight.medium,
+    lineHeight: 16,
   },
 
   bannerWrap: {
