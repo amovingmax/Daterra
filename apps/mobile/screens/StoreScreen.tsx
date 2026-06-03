@@ -11,14 +11,20 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { getSupplier, listSupplierProducts } from '../lib/queries';
+import { useAuth } from '../lib/auth-context';
+import { useFavorites } from '../lib/favorites-context';
 import { CartBar } from '../components/CartBar';
 import type { DBProduct, DBSupplier } from '../lib/supabase';
-import type { HomeStackParamList } from '../navigation/types';
+import type { HomeStackParamList, RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'Store'>;
 
@@ -61,6 +67,9 @@ function formatBRPhone(raw: string) {
 export function StoreScreen({ route, navigation }: Props) {
   const { supplierId } = route.params;
   const insets = useSafeAreaInsets();
+  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { user } = useAuth();
+  const { isFavoriteSupplier, toggleSupplier } = useFavorites();
   const [supplier, setSupplier] = useState<DBSupplier | null>(null);
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +142,23 @@ export function StoreScreen({ route, navigation }: Props) {
                 hitSlop={8}
               >
                 <Ionicons name="chevron-back" size={22} color={colors.ink.primary} />
+              </Pressable>
+              <Pressable
+                style={[styles.favFab, { top: insets.top + 8 }]}
+                onPress={() => {
+                  if (!user) {
+                    rootNav.navigate('Auth', { screen: 'AuthHub' });
+                    return;
+                  }
+                  toggleSupplier(supplier.id);
+                }}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name={isFavoriteSupplier(supplier.id) ? 'heart' : 'heart-outline'}
+                  size={22}
+                  color={isFavoriteSupplier(supplier.id) ? colors.status.danger : colors.ink.primary}
+                />
               </Pressable>
             </View>
             <View style={styles.summary}>
@@ -289,6 +315,21 @@ const styles = StyleSheet.create({
   backFabIcon: {
     fontSize: 20,
     color: colors.ink.primary,
+  },
+  favFab: {
+    position: 'absolute',
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   summary: {
     paddingHorizontal: 20,

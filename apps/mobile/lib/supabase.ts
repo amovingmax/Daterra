@@ -30,3 +30,4 @@ export type DBOrder = Database['public']['Tables']['orders']['Row'];
 export type DBOrderItem = Database['public']['Tables']['order_items']['Row'];
 export type DBAddress = Database['public']['Tables']['addresses']['Row'];
 export type DBNotification = Database['public']['Tables']['notifications']['Row'];
+export type DBFavorite = Database['public']['Tables']['favorites']['Row'];

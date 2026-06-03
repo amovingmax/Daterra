@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, typography } from '@daterra/ui/tokens';
 
 import { AuthProvider, useAuth } from './lib/auth-context';
+import { FavoritesProvider } from './lib/favorites-context';
 import { CartProvider } from './lib/cart-context';
 import { AuthHubScreen } from './screens/auth/AuthHubScreen';
 import { LoginScreen } from './screens/auth/LoginScreen';
@@ -35,6 +36,7 @@ import { ProfileScreen } from './screens/profile/ProfileScreen';
 import { EditProfileScreen } from './screens/profile/EditProfileScreen';
 import { AddressesListScreen } from './screens/profile/AddressesListScreen';
 import { AddressFormScreen } from './screens/profile/AddressFormScreen';
+import { FavoritesScreen } from './screens/profile/FavoritesScreen';
 import { AboutScreen } from './screens/profile/AboutScreen';
 import { DeleteAccountScreen } from './screens/profile/DeleteAccountScreen';
 import type {
@@ -99,6 +101,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen name="EditProfile" component={EditProfileScreen} />
       <ProfileStack.Screen name="Addresses" component={AddressesListScreen} />
       <ProfileStack.Screen name="AddressForm" component={AddressFormScreen} />
+      <ProfileStack.Screen name="Favorites" component={FavoritesScreen} />
       <ProfileStack.Screen name="About" component={AboutScreen} />
       <ProfileStack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
     </ProfileStack.Navigator>
@@ -275,12 +278,14 @@ export default function App() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <AuthProvider>
-          <CartProvider>
-            <NavigationContainer>
-              <StatusBar style="dark" />
-              <RootNavigator />
-            </NavigationContainer>
-          </CartProvider>
+          <FavoritesProvider>
+            <CartProvider>
+              <NavigationContainer>
+                <StatusBar style="dark" />
+                <RootNavigator />
+              </NavigationContainer>
+            </CartProvider>
+          </FavoritesProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -149,6 +149,40 @@ export async function getProduct(id: string): Promise<DBProduct | null> {
   return data;
 }
 
+export interface FavoriteProductItem extends DBProduct {
+  supplier_name: string;
+}
+
+export interface MyFavorites {
+  suppliers: DBSupplier[];
+  products: FavoriteProductItem[];
+}
+
+/** Lojas + produtos favoritados pelo usuário, com dados completos pra render. */
+export async function listMyFavorites(userId: string): Promise<MyFavorites> {
+  const { data } = await supabase
+    .from('favorites')
+    .select(
+      'supplier_id, product_id, created_at, supplier:suppliers(*), product:products(*, supplier:suppliers(name))',
+    )
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  const suppliers: DBSupplier[] = [];
+  const products: FavoriteProductItem[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const row of (data ?? []) as any[]) {
+    if (row.supplier) suppliers.push(row.supplier as DBSupplier);
+    if (row.product) {
+      products.push({
+        ...(row.product as DBProduct),
+        supplier_name: row.product.supplier?.name ?? '',
+      });
+    }
+  }
+  return { suppliers, products };
+}
+
 export async function listMyAddresses(userId: string): Promise<DBAddress[]> {
   const { data } = await supabase
     .from('addresses')

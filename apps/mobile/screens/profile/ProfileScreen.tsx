@@ -95,6 +95,11 @@ export function ProfileScreen({ navigation }: Props) {
           title: 'Atividade',
           items: [
             {
+              icon: 'heart-outline',
+              label: 'Favoritos',
+              onPress: () => navigation.navigate('Favorites'),
+            },
+            {
               icon: 'pricetag-outline',
               label: 'Cupons',
               onPress: () => Alert.alert('Em breve', 'Programa de cupons na Fase 2.'),

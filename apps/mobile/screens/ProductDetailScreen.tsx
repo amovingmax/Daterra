@@ -13,7 +13,10 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { formatBRL } from '@daterra/shared';
 import { colors, typography } from '@daterra/ui/tokens';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,17 +24,26 @@ import { Bounded } from '../components/Bounded';
 import { CONTENT_MAX_WIDTH } from '../lib/responsive';
 import { Button } from '../components/Button';
 import { useCart } from '../lib/cart-context';
+import { useAuth } from '../lib/auth-context';
+import { useFavorites } from '../lib/favorites-context';
 import { getProduct, getSupplier } from '../lib/queries';
 import type { DBProduct, DBSupplier } from '../lib/supabase';
-import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
+import type {
+  HomeStackParamList,
+  MainTabParamList,
+  RootStackParamList,
+} from '../navigation/types';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ProductDetail'>;
 
 export function ProductDetailScreen({ route, navigation }: Props) {
   const tabNav = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+  const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const { productId } = route.params;
   const { addItem, forceReplace } = useCart();
+  const { user } = useAuth();
+  const { isFavoriteProduct, toggleProduct } = useFavorites();
 
   const [product, setProduct] = useState<DBProduct | null>(null);
   const [supplier, setSupplier] = useState<DBSupplier | null>(null);
@@ -125,6 +137,23 @@ export function ProductDetailScreen({ route, navigation }: Props) {
             hitSlop={8}
           >
             <Ionicons name="chevron-back" size={22} color={colors.ink.primary} />
+          </Pressable>
+          <Pressable
+            style={[styles.favFab, { top: insets.top + 8 }]}
+            onPress={() => {
+              if (!user) {
+                rootNav.navigate('Auth', { screen: 'AuthHub' });
+                return;
+              }
+              toggleProduct(product.id);
+            }}
+            hitSlop={8}
+          >
+            <Ionicons
+              name={isFavoriteProduct(product.id) ? 'heart' : 'heart-outline'}
+              size={22}
+              color={isFavoriteProduct(product.id) ? colors.status.danger : colors.ink.primary}
+            />
           </Pressable>
         </View>
 
@@ -241,6 +270,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backFabIcon: { fontSize: 20, color: colors.ink.primary },
+  favFab: {
+    position: 'absolute',
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   body: { padding: 20 },
   name: {
     fontSize: 24,

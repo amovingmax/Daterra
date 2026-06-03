@@ -29,6 +29,7 @@ export type ProfileStackParamList = {
   EditProfile: undefined;
   Addresses: undefined;
   AddressForm: { address?: DBAddress };
+  Favorites: undefined;
   About: undefined;
   DeleteAccount: undefined;
 };
